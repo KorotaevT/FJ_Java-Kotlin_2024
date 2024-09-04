@@ -11,8 +11,8 @@ public class JsonParser {
 
     private final ObjectMapper mapper;
 
-    public JsonParser() {
-        this.mapper = new ObjectMapper();
+    public JsonParser(ObjectMapper mapper) {
+        this.mapper = mapper;
     }
 
     public <T> T parse(String path, Class<T> clazz) {
