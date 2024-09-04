@@ -10,7 +10,7 @@ import java.io.StringWriter;
 @Slf4j
 public class XmlConverter {
 
-    public static <T> String toXML(T object) {
+    public <T> String toXML(T object) {
         try {
             log.info("Starting conversion of object to XML: {}", object);
             JAXBContext context = JAXBContext.newInstance(object.getClass());

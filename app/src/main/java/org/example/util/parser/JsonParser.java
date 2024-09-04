@@ -9,9 +9,13 @@ import java.io.IOException;
 @Slf4j
 public class JsonParser {
 
-    public static <T> T parse(String path, Class<T> clazz) {
-        ObjectMapper mapper = new ObjectMapper();
+    private final ObjectMapper mapper;
 
+    public JsonParser() {
+        this.mapper = new ObjectMapper();
+    }
+
+    public <T> T parse(String path, Class<T> clazz) {
         try {
             log.info("Parsing file: {}", path);
             T object = mapper.readValue(new File(path), clazz);

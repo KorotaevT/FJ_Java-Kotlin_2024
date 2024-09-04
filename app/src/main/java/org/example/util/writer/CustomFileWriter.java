@@ -8,7 +8,7 @@ import java.io.IOException;
 @Slf4j
 public class CustomFileWriter {
 
-    public static void writeToFile(String text, String path) {
+    public void writeToFile(String text, String path) {
         try (FileWriter writer = new FileWriter(path)) {
             log.info("Writing text to file: {}", path);
             writer.write(text);
