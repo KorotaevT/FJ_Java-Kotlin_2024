@@ -66,8 +66,14 @@ public class CustomLinkedList<T> {
     public boolean contains(T data) {
         Node current = head;
         while (current != null) {
-            if (current.data.equals(data)) {
-                return true;
+            if (data == null) {
+                if (current.data == null) {
+                    return true;
+                }
+            } else {
+                if (data.equals(current.data)) {
+                    return true;
+                }
             }
             current = current.next;
         }

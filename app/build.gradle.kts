@@ -17,6 +17,7 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:1.5.7")
     implementation("javax.xml.bind:jaxb-api:2.3.1")
     implementation("org.glassfish.jaxb:jaxb-runtime:2.3.3")
+    testImplementation("org.assertj:assertj-core:3.26.3")
 }
 
 java {

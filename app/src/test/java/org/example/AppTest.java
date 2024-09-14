@@ -7,9 +7,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class AppTest {
 
@@ -26,9 +24,9 @@ public class AppTest {
         list.add(2);
         list.add(3);
 
-        assertEquals(Integer.valueOf(1), list.get(0));
-        assertEquals(Integer.valueOf(2), list.get(1));
-        assertEquals(Integer.valueOf(3), list.get(2));
+        assertThat(list.get(0)).isEqualTo(1);
+        assertThat(list.get(1)).isEqualTo(2);
+        assertThat(list.get(2)).isEqualTo(3);
     }
 
     @Test
@@ -36,7 +34,7 @@ public class AppTest {
         list.add(1);
         list.add(2);
 
-        assertEquals(Integer.valueOf(1), list.getFirst());
+        assertThat(list.getFirst()).isEqualTo(1);
     }
 
     @Test
@@ -46,19 +44,21 @@ public class AppTest {
         list.add(3);
         list.remove(1);
 
-        assertEquals(Integer.valueOf(1), list.get(0));
-        assertEquals(Integer.valueOf(3), list.get(1));
-        assertEquals(2, list.size());
+        assertThat(list.get(0)).isEqualTo(1);
+        assertThat(list.get(1)).isEqualTo(3);
+        assertThat(list.size()).isEqualTo(2);
     }
 
     @Test
     public void testContains() {
         list.add(1);
         list.add(2);
+        list.add(null);
         list.add(3);
 
-        assertTrue(list.contains(3));
-        assertFalse(list.contains(4));
+        assertThat(list.contains(3)).isEqualTo(true);
+        assertThat(list.contains(null)).isEqualTo(true);
+        assertThat(list.contains(4)).isEqualTo(false);
     }
 
     @Test
@@ -68,9 +68,9 @@ public class AppTest {
         List<Integer> additionalList = Arrays.asList(4, 5, 6);
         list.addAll(additionalList);
 
-        assertEquals(5, list.size());
-        assertEquals(Integer.valueOf(4), list.get(2));
-        assertEquals(Integer.valueOf(6), list.get(4));
+        assertThat(list.size()).isEqualTo(5);
+        assertThat(list.get(2)).isEqualTo(4);
+        assertThat(list.get(4)).isEqualTo(6);
     }
 
     @Test
@@ -83,9 +83,9 @@ public class AppTest {
 
         list.addAll(otherList);
 
-        assertEquals(4, list.size());
-        assertEquals(Integer.valueOf(7), list.get(2));
-        assertEquals(Integer.valueOf(8), list.get(3));
+        assertThat(list.size()).isEqualTo(4);
+        assertThat(list.get(2)).isEqualTo(7);
+        assertThat(list.get(3)).isEqualTo(8);
     }
 
 }
