@@ -7,7 +7,7 @@ import org.example.util.converter.XmlConverter;
 import org.example.util.parser.JsonParser;
 import org.example.util.writer.CustomFileWriter;
 
-public class App {
+public class Homework2 {
 
     public static void main(String[] args) {
         ObjectMapper objectMapper = new ObjectMapper();
