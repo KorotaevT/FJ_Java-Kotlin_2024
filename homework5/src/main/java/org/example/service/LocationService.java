@@ -36,10 +36,9 @@ public class LocationService {
         return location;
     }
 
-    public void createLocation(LocationRequest request) {
+    public Long createLocation(LocationRequest request) {
         log.info("Creating location: {}", request);
-        repository.save(parseRequestToModel(request));
-        log.info("Location '{}' created successfully.", request.getName());
+        return repository.save(parseRequestToModel(request));
     }
 
     public void createLocation(LocationResponse response) {
@@ -60,8 +59,11 @@ public class LocationService {
         log.info("Location with id {} deleted successfully.", id);
     }
 
-    private LocationRequest parseModelToRequest(Location category) {
-        return new LocationRequest(category.getName(), category.getSlug());
+    private LocationRequest parseModelToRequest(Location location) {
+        if (location == null) {
+            return null;
+        }
+        return new LocationRequest(location.getSlug(), location.getName());
     }
 
     private Location parseRequestToModel(LocationRequest request) {

@@ -62,7 +62,10 @@ public class CategoryService {
     }
 
     private CategoryRequest parseModelToRequest(Category category) {
-        return new CategoryRequest(category.getName(), category.getSlug());
+        if (category == null) {
+            return null;
+        }
+        return new CategoryRequest(category.getSlug(), category.getName());
     }
 
     private Category parseRequestToModel(CategoryRequest request) {

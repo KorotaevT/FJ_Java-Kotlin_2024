@@ -1,9 +1,11 @@
 package org.example.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.dto.request.CategoryRequest;
 import org.example.service.CategoryService;
 import org.example.timed.Timed;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,17 +31,23 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public CategoryRequest getCategoryById(@PathVariable Long id) {
-        return categoryService.getCategoryById(id);
+    public ResponseEntity<CategoryRequest> getCategoryById(@PathVariable Long id) {
+        CategoryRequest category = categoryService.getCategoryById(id);
+
+        if (category == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        return ResponseEntity.ok(category);
     }
 
     @PostMapping
-    public Long createCategory(@RequestBody CategoryRequest request) {
+    public Long createCategory(@Valid @RequestBody CategoryRequest request) {
         return categoryService.createCategory(request);
     }
 
     @PutMapping("/{id}")
-    public void updateCategory(@PathVariable Long id, @RequestBody CategoryRequest request) {
+    public void updateCategory(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
         categoryService.updateCategory(id, request);
     }
 
