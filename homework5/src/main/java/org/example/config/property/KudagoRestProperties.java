@@ -11,7 +11,7 @@ import java.time.Duration;
 @Setter
 @Configuration
 @ConfigurationProperties("rest.kudago")
-public class RestProperties {
+public class KudagoRestProperties {
     private String url;
     private Duration readTimeout;
     private Duration connectTimeout;
