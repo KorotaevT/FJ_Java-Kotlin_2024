@@ -12,3 +12,6 @@ plugins {
 
 rootProject.name = "FJ_Java-Kotlin_2024"
 include("app")
+include("homework5")
+include("simple-starter")
+include("simple-starter")
