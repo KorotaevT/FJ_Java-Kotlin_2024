@@ -1,9 +1,11 @@
 package org.example.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.dto.request.LocationRequest;
 import org.example.service.LocationService;
 import org.example.timed.Timed;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,17 +31,21 @@ public class LocationController {
     }
 
     @GetMapping("/{id}")
-    public LocationRequest getLocationById(@PathVariable Long id) {
-        return locationService.getLocationById(id);
+    public ResponseEntity<LocationRequest> getLocationById(@PathVariable Long id) {
+        LocationRequest location = locationService.getLocationById(id);
+        if (location == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(location);
     }
 
     @PostMapping
-    public void createLocation(@RequestBody LocationRequest request) {
-        locationService.createLocation(request);
+    public Long createLocation(@Valid @RequestBody LocationRequest request) {
+        return locationService.createLocation(request);
     }
 
     @PutMapping("/{id}")
-    public void updateLocation(@PathVariable Long id, @RequestBody LocationRequest request) {
+    public void updateLocation(@PathVariable Long id, @Valid @RequestBody LocationRequest request) {
         locationService.updateLocation(id, request);
     }
 
