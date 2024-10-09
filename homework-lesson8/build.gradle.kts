@@ -24,6 +24,10 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.34")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.12.3")
+    implementation("io.github.resilience4j:resilience4j-spring-boot3:2.2.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
 
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("org.wiremock:wiremock-standalone:3.6.0")
@@ -41,7 +45,7 @@ jacoco {
 
 val jacocoExclusions = listOf(
     "org/example/dto/**",
-    "org/example/model/**",
+    "org/example/exception/**",
     "org/example/configuration/**"
 )
 
