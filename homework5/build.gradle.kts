@@ -29,6 +29,10 @@ dependencies {
     testImplementation("org.wiremock:wiremock-standalone:3.6.0")
     testImplementation("org.wiremock.integrations.testcontainers:wiremock-testcontainers-module:1.0-alpha-13")
     testImplementation("org.testcontainers:junit-jupiter:1.19.7")
+
+    implementation("org.springframework.boot:spring-boot-starter-validation")
+    implementation("io.projectreactor:reactor-core:3.6.10")
+
 }
 
 tasks.test {
