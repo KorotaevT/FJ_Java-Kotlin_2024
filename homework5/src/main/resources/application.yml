@@ -24,3 +24,12 @@ initialization:
 
 server:
   port: 8081
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/fj
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  liquibase:
+    change-log: liquibase/changelog.xml
