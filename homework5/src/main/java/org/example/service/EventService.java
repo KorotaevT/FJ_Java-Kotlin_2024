@@ -1,10 +1,17 @@
 package org.example.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.example.config.mapper.EventMapper;
+import org.example.dto.response.EventEntityResponse;
+import org.example.dto.request.EventDetailsRequest;
 import org.example.dto.request.EventRequest;
 import org.example.dto.response.EventKudagoDates;
 import org.example.dto.response.EventKudagoResult;
-import org.example.dto.response.EventResponse;
+import org.example.exceptions.RelatedEntityNotFoundException;
+import org.example.model.Event;
+import org.example.repository.EventRepository;
+import org.example.repository.PlaceRepository;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -30,7 +37,13 @@ public class EventService {
 
     private final CurrencyService currencyService;
 
-    public CompletableFuture<List<EventResponse>> getEventsByCompletableFuture(EventRequest request) {
+    private final EventRepository eventRepository;
+
+    private final PlaceRepository placeRepository;
+
+    private final EventMapper eventMapper;
+
+    public CompletableFuture<List<org.example.dto.response.EventResponse>> getEventsByCompletableFuture(EventRequest request) {
         var dateFrom = request.getDateFrom() != null ?
                 request.getDateFrom() : LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
@@ -67,7 +80,7 @@ public class EventService {
         );
     }
 
-    public Flux<EventResponse> getEventsByMonoAndFlux(EventRequest request) {
+    public Flux<org.example.dto.response.EventResponse> getEventsByMonoAndFlux(EventRequest request) {
         var dateFrom = request.getDateFrom() != null ?
                 request.getDateFrom() : LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
@@ -132,7 +145,7 @@ public class EventService {
     }
 
     private void removeUnnecessaryEventDates(EventKudagoResult responseDTO, long dateFromTimestamp, long dateToTimestamp) {
-        List<EventKudagoDates> suitableDate = new ArrayList<>();
+        var suitableDate = new ArrayList<EventKudagoDates>();
 
         for (EventKudagoDates dto : responseDTO.getDates()) {
             if (dto.getStart() >= dateFromTimestamp && dto.getEnd() <= dateToTimestamp) {
@@ -143,8 +156,8 @@ public class EventService {
         }
     }
 
-    private EventResponse eventKudagoResultDTOToEventResponseDTO(EventKudagoResult kudagoResultDTO) {
-        var responseDTO = new EventResponse();
+    private org.example.dto.response.EventResponse eventKudagoResultDTOToEventResponseDTO(EventKudagoResult kudagoResultDTO) {
+        var responseDTO = new org.example.dto.response.EventResponse();
         responseDTO.setTitle(kudagoResultDTO.getTitle());
         responseDTO.setStartDate(
                 LocalDateTime.ofInstant(Instant.ofEpochSecond(kudagoResultDTO.getDates().getFirst().getStart()), ZoneOffset.UTC)
@@ -155,6 +168,68 @@ public class EventService {
         responseDTO.setPrice(findMinPrice(kudagoResultDTO.getPrice()));
 
         return responseDTO;
+    }
+
+    public List<EventEntityResponse> getAllEvents() {
+        return eventRepository
+                .findAll()
+                .stream()
+                .map(eventMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public EventEntityResponse getEventById(Long id) {
+        return eventRepository
+                .findById(id)
+                .map(eventMapper::toResponse)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found"));
+    }
+
+    public EventEntityResponse createEvent(EventDetailsRequest eventDetails) {
+        var place = placeRepository.findById(eventDetails.getPlaceId()).orElseThrow(
+                () -> new RelatedEntityNotFoundException("Place not found")
+        );
+
+        var event = new Event();
+        event.setName(eventDetails.getName());
+        event.setDate(eventDetails.getDate());
+        event.setPlace(place);
+        eventRepository.save(event);
+
+        return eventMapper.toResponse(event);
+    }
+
+    public EventEntityResponse updateEvent(Long id, EventDetailsRequest eventDetails) {
+        var event = eventRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("Event not found")
+        );
+
+        var place = placeRepository.findById(eventDetails.getPlaceId()).orElseThrow(
+                () -> new RelatedEntityNotFoundException("Place not found")
+        );
+
+        event.setName(eventDetails.getName());
+        event.setDate(eventDetails.getDate());
+        event.setPlace(place);
+        eventRepository.save(event);
+
+        return eventMapper.toResponse(event);
+    }
+
+    public void deleteEvent(Long id) {
+        if (!eventRepository.existsById(id)) {
+            throw new EntityNotFoundException("Event not found");
+        }
+
+        eventRepository.deleteById(id);
+    }
+
+    public List<EventEntityResponse> getEvents(String name, String placeName, LocalDate fromDate, LocalDate toDate) {
+        return eventRepository
+                .findAll(EventRepository.buildSpecification(name, placeName, fromDate, toDate))
+                .stream()
+                .map(eventMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
 }
