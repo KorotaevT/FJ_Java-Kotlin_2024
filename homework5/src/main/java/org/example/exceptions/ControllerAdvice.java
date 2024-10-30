@@ -9,6 +9,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.NoSuchElementException;
+
 @RestControllerAdvice
 public class ControllerAdvice {
 
@@ -48,7 +50,7 @@ public class ControllerAdvice {
                 .body(new ErrorMessageResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage()));
     }
 
-    @ExceptionHandler(CurrencyRateNotFoundException.class)
+    @ExceptionHandler({CurrencyRateNotFoundException.class, EntityNotFoundException.class, NoSuchElementException.class})
     public ResponseEntity<ErrorMessageResponse> handleCurrencyRateNotFoundException(RuntimeException e) {
         return ResponseEntity
                 .status(HttpStatus.NOT_FOUND)

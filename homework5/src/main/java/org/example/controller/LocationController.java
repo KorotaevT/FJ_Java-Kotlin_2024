@@ -40,8 +40,8 @@ public class LocationController {
     }
 
     @PostMapping
-    public Long createLocation(@Valid @RequestBody LocationRequest request) {
-        return locationService.createLocation(request);
+    public void createLocation(@Valid @RequestBody LocationRequest request) {
+        locationService.createLocation(request);
     }
 
     @PutMapping("/{id}")
@@ -52,6 +52,11 @@ public class LocationController {
     @DeleteMapping("/{id}")
     public void deleteLocation(@PathVariable Long id) {
         locationService.deleteLocation(id);
+    }
+
+    @PostMapping("/restore")
+    public void restore() {
+        locationService.restore();
     }
 
 }
