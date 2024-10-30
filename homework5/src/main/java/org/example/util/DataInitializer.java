@@ -2,8 +2,6 @@ package org.example.util;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.dto.response.CategoryResponse;
-import org.example.dto.response.LocationResponse;
 import org.example.service.CategoryService;
 import org.example.service.KudagoService;
 import org.example.service.LocationService;
@@ -38,36 +36,15 @@ public class DataInitializer {
         scheduledThreadPool.schedule(this::initializeData, 0, TimeUnit.SECONDS);
     }
 
-    @Scheduled(fixedDelayString = "${initialization.interval}")
+    @Scheduled(initialDelayString = "${initialization.interval}", fixedDelayString = "${initialization.interval}")
     @Timed
     public void initializeData() {
         log.info("Scheduled data initialization started...");
 
-        fixedThreadPool.submit(() -> {
-            var categories = kudagoService.getCategories();
-            if (categories == null) {
-                log.info("No categories fetched. Received null response.");
-            } else {
-                log.info("Fetched {} categories.", categories.length);
+        CommandExecutor executor = new CommandExecutor(fixedThreadPool);
 
-                for (CategoryResponse category : categories) {
-                    categoryService.createCategory(category);
-                }
-            }
-        });
-
-        fixedThreadPool.submit(() -> {
-            var locations = kudagoService.getLocations();
-            if (locations == null) {
-                log.info("No locations fetched. Received null response.");
-            } else {
-                log.info("Fetched {} locations.", locations.length);
-
-                for (LocationResponse location : locations) {
-                    locationService.createLocation(location);
-                }
-            }
-        });
+        executor.executeCommand(new FetchAndSaveCategoriesCommand(kudagoService, categoryService));
+        executor.executeCommand(new FetchAndSaveLocationsCommand(kudagoService, locationService));
 
         log.info("Scheduled data initialization completed.");
     }
