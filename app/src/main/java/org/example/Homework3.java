@@ -2,6 +2,7 @@ package org.example;
 
 import org.example.collection.CustomLinkedList;
 
+import java.util.Iterator;
 import java.util.stream.Stream;
 
 public class Homework3 {
@@ -12,6 +13,9 @@ public class Homework3 {
 
         System.out.println("CustomLinkedList after converting from stream:");
         printList(customLinkedList);
+
+        System.out.println("Demonstrating iterator:");
+        demonstrateIterator(customLinkedList);
     }
 
     public static CustomLinkedList<Integer> createLinkedListFromStream(Stream<Integer> stream) {
@@ -31,6 +35,14 @@ public class Homework3 {
     public static void printList(CustomLinkedList<?> list) {
         for (int i = 0; i < list.size(); i++) {
             System.out.print(list.get(i) + " -> ");
+        }
+        System.out.println("null");
+    }
+
+    public static void demonstrateIterator(CustomLinkedList<?> list) {
+        Iterator<?> iterator = list.iterator();
+        while (iterator.hasNext()) {
+            System.out.print(iterator.next() + " -> ");
         }
         System.out.println("null");
     }
