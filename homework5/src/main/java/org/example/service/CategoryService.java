@@ -1,10 +1,10 @@
 package org.example.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.request.CategoryRequest;
 import org.example.dto.response.CategoryResponse;
 import org.example.model.Category;
+import org.example.pattern.observer.impl.ObservableImpl;
 import org.example.repository.CustomRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,15 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class CategoryService {
+public class CategoryService extends ObservableImpl<Category> {
 
     private final CustomRepository<Category> repository;
+
+    public CategoryService(CustomRepository<Category> repository) {
+        this.repository = repository;
+        addObserver(repository);
+    }
 
     public Collection<CategoryRequest> getAllCategories() {
         log.info("Fetching all categories.");
@@ -45,7 +49,7 @@ public class CategoryService {
 
     public void createCategory(CategoryResponse response) {
         log.info("Creating category from response: {}", response);
-        repository.save(parseResponseToModel(response));
+        notifyObservers(parseResponseToModel(response));
         log.info("Category '{}' created successfully from response.", response.getName());
     }
 
@@ -74,6 +78,10 @@ public class CategoryService {
 
     private Category parseResponseToModel(CategoryResponse response) {
         return new Category(response.getSlug(), response.getName());
+    }
+
+    public void restore() {
+        repository.restore();
     }
 
 }
