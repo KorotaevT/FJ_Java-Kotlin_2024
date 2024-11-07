@@ -1,6 +1,9 @@
 package org.example.collection;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
+import java.util.function.Consumer;
 
 public class CustomLinkedList<T> {
 
@@ -12,6 +15,37 @@ public class CustomLinkedList<T> {
             this.data = data;
             this.next = null;
         }
+    }
+
+    public Iterator<T> iterator() {
+        return new CustomIterator();
+    }
+
+    private class CustomIterator implements Iterator<T> {
+        private Node current = head;
+
+        @Override
+        public boolean hasNext() {
+            return current != null;
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            T data = current.data;
+            current = current.next;
+            return data;
+        }
+
+        @Override
+        public void forEachRemaining(Consumer<? super T> action) {
+            while (hasNext()) {
+                action.accept(next());
+            }
+        }
+
     }
 
     private Node head;

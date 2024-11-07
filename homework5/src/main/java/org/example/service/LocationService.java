@@ -1,10 +1,10 @@
 package org.example.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.dto.request.LocationRequest;
 import org.example.dto.response.LocationResponse;
 import org.example.model.Location;
+import org.example.pattern.observer.impl.ObservableImpl;
 import org.example.repository.CustomRepository;
 import org.springframework.stereotype.Service;
 
@@ -12,11 +12,15 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
-public class LocationService {
+public class LocationService extends ObservableImpl<Location> {
 
     private final CustomRepository<Location> repository;
+
+    public LocationService(CustomRepository<Location> repository) {
+        this.repository = repository;
+        addObserver(repository);
+    }
 
     public Collection<LocationRequest> getAllLocations() {
         log.info("Fetching all locations.");
@@ -36,9 +40,9 @@ public class LocationService {
         return location;
     }
 
-    public Long createLocation(LocationRequest request) {
+    public void createLocation(LocationRequest request) {
         log.info("Creating location: {}", request);
-        return repository.save(parseRequestToModel(request));
+        notifyObservers(parseRequestToModel(request));
     }
 
     public void createLocation(LocationResponse response) {
@@ -72,6 +76,10 @@ public class LocationService {
 
     private Location parseResponseToModel(LocationResponse response) {
         return new Location(response.getSlug(), response.getName());
+    }
+
+    public void restore() {
+        repository.restore();
     }
 
 }

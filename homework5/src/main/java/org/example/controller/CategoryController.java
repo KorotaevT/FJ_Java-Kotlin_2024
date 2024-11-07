@@ -56,4 +56,9 @@ public class CategoryController {
         categoryService.deleteCategory(id);
     }
 
+    @PostMapping("/restore")
+    public void restore() {
+        categoryService.restore();
+    }
+
 }
