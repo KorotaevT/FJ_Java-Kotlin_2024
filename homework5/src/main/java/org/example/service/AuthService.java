@@ -63,7 +63,7 @@ public class AuthService {
 
         var user = userRepository.findByUsername(loginRequest.getUsername());
 
-        String token = jwtService.generateToken(user, loginRequest.isRememberMe());
+        var token = jwtService.generateToken(user, loginRequest.getRememberMe());
         response.setHeader("Authorization", "Bearer " + token);
     }
 
