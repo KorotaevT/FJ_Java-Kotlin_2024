@@ -33,3 +33,8 @@ spring:
     driver-class-name: org.postgresql.Driver
   liquibase:
     change-log: liquibase/changelog.xml
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY:FEAA575643235CF7B954951CC2D9EC14178D373DA120612792DBC905062CD0D8}
+verification:
+  code: ${VERIFICATION_CODE:0000}
