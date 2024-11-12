@@ -12,6 +12,8 @@ import java.util.List;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -85,13 +87,13 @@ public class LocationControllerTest extends AbstractTestContainer {
                 }
                 """;
 
-        when(locationService.createLocation(any(LocationRequest.class))).thenReturn(1L);
-
         mockMvc.perform(post("/api/v1/locations")
                         .content(locationRequest)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(content().string("1"));
+                .andExpect(content().string("Location created"));
+
+        verify(locationService, times(1)).createLocation(any(LocationRequest.class));
     }
 
     @Test
