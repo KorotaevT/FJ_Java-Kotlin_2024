@@ -3,6 +3,7 @@ plugins {
     id("org.springframework.boot") version "3.2.4"
     id("io.spring.dependency-management") version "1.1.4"
     id("jacoco")
+    id("checkstyle")
 }
 
 group = "org.example"
@@ -67,10 +68,20 @@ jacoco {
     toolVersion = "0.8.11"
 }
 
+checkstyle {
+    toolVersion = "10.20.1"
+}
+
 val jacocoExclusions = listOf(
     "org/example/dto/**",
     "org/example/model/**",
-    "org/example/configuration/**"
+    "org/example/configuration/**",
+    "org/example/configuration/**",
+    "org/example/auth/**",
+    "org/example/entity/**",
+    "org/example/pattern/**",
+    "org/example/exception/**",
+    "org/example/repository/**"
 )
 
 tasks.jacocoTestReport {
