@@ -22,7 +22,7 @@ RUN ls -la gradle/wrapper
 ENV JAVA_OPTS="-Dhttps.protocols=TLSv1.2,TLSv1.3"
 
 # Установка зависимостей
-RUN ./gradlew dependencies --configuration runtimeClasspath
+RUN ./gradlew :homework5:dependencies --configuration runtimeClasspath
 
 # Копирование исходного кода
 COPY homework5/src homework5/src
