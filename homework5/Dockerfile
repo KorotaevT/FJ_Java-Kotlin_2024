@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y dos2unix
 # Копируем Gradle Wrapper файлы
 COPY gradlew .
 COPY gradle/ gradle/
-COPY build.gradle.kts .
+COPY homework5/build.gradle.kts .
 
 RUN chmod +x gradlew
 
