@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        module: ["homework5"]
+        module: ["", "app", "simple-starter", "homework5"]
 
     steps:
       - name: Checkout code
