@@ -25,12 +25,14 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok")
     compileOnly("org.projectlombok:lombok")
 
-    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    dependencies {
+        testImplementation("org.springframework.boot:spring-boot-starter-test") {
+            exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
+        }
+    }
 
     testImplementation("io.rest-assured:rest-assured")
     testImplementation("org.wiremock:wiremock-standalone:3.6.0")
-    testImplementation("org.wiremock.integrations.testcontainers:wiremock-testcontainers-module:1.0-alpha-13")
-    testImplementation("org.testcontainers:junit-jupiter:1.19.7")
 
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("io.projectreactor:reactor-core:3.6.10")
@@ -39,8 +41,6 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     implementation("org.mapstruct:mapstruct:1.5.5.Final")
     annotationProcessor("org.mapstruct:mapstruct-processor:1.5.5.Final")
-    testImplementation("org.testcontainers:junit-jupiter")
-    testImplementation("org.testcontainers:postgresql")
     runtimeOnly("org.postgresql:postgresql")
 
     implementation("org.springframework.boot:spring-boot-starter")
@@ -56,7 +56,8 @@ dependencies {
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.6")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.5.0")
-    testImplementation("org.springframework.security:spring-security-test:5.8.2")
+    testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("org.testcontainers:testcontainers:1.19.7")
 
 }
 

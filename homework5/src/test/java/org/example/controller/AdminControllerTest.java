@@ -1,38 +1,42 @@
-//package org.example.controller;
-//
-//import org.junit.jupiter.api.Test;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.security.test.context.support.WithMockUser;
-//import org.springframework.test.web.servlet.MockMvc;
-//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-//import lombok.RequiredArgsConstructor;
-//import org.example.AbstractTestContainer;
-//import org.springframework.test.annotation.DirtiesContext;
-//import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-//import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-//
-//@RequiredArgsConstructor
-//public class AdminControllerTest extends AbstractTestContainer {
-//
-//    @Autowired
-//    private MockMvc mockMvc;
-//
-//    @Test
-//    @DirtiesContext
-//    @WithMockUser(username = "admin", roles = {"ADMIN"})
-//    public void testGetAdminInfo() throws Exception {
-//        mockMvc.perform(get("/api/v1/admin"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("Admin check"));
-//    }
-//
-//    @Test
-//    @DirtiesContext
-//    @WithMockUser(username = "user", roles = {"USER"})
-//    public void testGetAdminInfoForbidden() throws Exception {
-//        mockMvc.perform(get("/api/v1/admin"))
-//                .andExpect(status().isForbidden())
-//                .andExpect(content().string("Forbidden"));
-//    }
-//
-//}
+package org.example.controller;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.context.jdbc.Sql;
+
+import static org.example.MockObjects.adminLoginRequest;
+import static org.example.MockObjects.userLoginRequest;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import lombok.RequiredArgsConstructor;
+import org.example.AbstractTestContainer;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+
+@RequiredArgsConstructor
+public class AdminControllerTest extends AbstractTestContainer {
+
+    @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void testGetAdminInfo() throws Exception {
+        var token = "Bearer " + authService.authenticate(adminLoginRequest);
+        mockMvc.perform(get("/api/v1/admin")
+                .header("Authorization", token))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Admin check"));
+    }
+
+    @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void testGetAdminInfoForbidden() throws Exception {
+        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        mockMvc.perform(get("/api/v1/admin")
+                .header("Authorization", token))
+                .andExpect(status().isForbidden());
+    }
+
+}
