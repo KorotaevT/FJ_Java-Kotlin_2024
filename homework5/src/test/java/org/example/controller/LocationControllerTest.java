@@ -7,9 +7,13 @@ import org.springframework.http.MediaType;
 import org.example.dto.request.LocationRequest;
 import org.springframework.test.context.jdbc.Sql;
 
-import java.util.Arrays;
 import java.util.List;
 
+import static org.example.MockObjects.INVALID_LOCATION_JSON;
+import static org.example.MockObjects.LOCATION_JSON;
+import static org.example.MockObjects.LOCATION_JSON_SINGLE;
+import static org.example.MockObjects.createLocationRequest;
+import static org.example.MockObjects.getLocations;
 import static org.example.MockObjects.userLoginRequest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -27,37 +31,28 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 public class LocationControllerTest extends AbstractTestContainer {
 
+    private static final String BASE_URL = "/api/v1/locations";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String BEARER_PREFIX = "Bearer ";
+
+    private static final long LOCATION_ID = 1;
+    private static final long NON_EXISTENT_LOCATION_ID = 999;
+
     @Test
     @Sql({
             "classpath:db/insert-data.sql",
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getAllLocations() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
-        List<LocationRequest> locations = Arrays.asList(
-                createLocationRequest("msk", "Москва"),
-                createLocationRequest("ekb", "Екатеринбург")
-        );
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        List<LocationRequest> locations = getLocations();
 
         when(locationService.getAllLocations()).thenReturn(locations);
 
-        mockMvc.perform(get("/api/v1/locations")
-                .header("Authorization", token))
+        mockMvc.perform(get(BASE_URL)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().json(
-                        """
-                        [
-                            {
-                                "slug": "msk",
-                                "name": "Москва"
-                            },
-                            {
-                                "slug": "ekb",
-                                "name": "Екатеринбург"
-                            }
-                        ]
-                        """
-                ));
+                .andExpect(content().json(LOCATION_JSON));
     }
 
     @Test
@@ -66,22 +61,15 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getLocationById() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         LocationRequest location = createLocationRequest("msk", "Москва");
 
         when(locationService.getLocationById(anyLong())).thenReturn(location);
 
-        mockMvc.perform(get("/api/v1/locations/{id}", 1)
-                .header("Authorization", token))
+        mockMvc.perform(get(BASE_URL + "/{id}", LOCATION_ID)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().json(
-                        """
-                        {
-                            "slug": "msk",
-                            "name": "Москва"
-                        }
-                        """
-                ));
+                .andExpect(content().json(LOCATION_JSON_SINGLE));
     }
 
     @Test
@@ -90,11 +78,11 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getLocationByNonExistentId() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         when(locationService.getLocationById(anyLong())).thenReturn(null);
 
-        mockMvc.perform(get("/api/v1/locations/{id}", 999)
-                .header("Authorization", token))
+        mockMvc.perform(get(BASE_URL + "/{id}", NON_EXISTENT_LOCATION_ID)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isNotFound());
     }
 
@@ -104,18 +92,12 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void createLocation() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
-        String locationRequest = """
-                {
-                    "slug": "msk",
-                    "name": "Москва"
-                }
-                """;
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 
-        mockMvc.perform(post("/api/v1/locations")
-                        .content(locationRequest)
+        mockMvc.perform(post(BASE_URL)
+                        .content(LOCATION_JSON_SINGLE)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
 
         verify(locationService, times(1)).createLocation(any(LocationRequest.class));
@@ -127,18 +109,12 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void createLocation_InvalidRequest() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
-        String invalidLocationRequest = """
-                {
-                    "slug": "",
-                    "name": ""
-                }
-                """;
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 
-        mockMvc.perform(post("/api/v1/locations")
-                        .content(invalidLocationRequest)
+        mockMvc.perform(post(BASE_URL)
+                        .content(INVALID_LOCATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isBadRequest());
     }
 
@@ -148,20 +124,14 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void updateLocationById() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
-        String locationRequest = """
-                {
-                    "slug": "msk",
-                    "name": "Москва"
-                }
-                """;
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 
         doNothing().when(locationService).updateLocation(anyLong(), any(LocationRequest.class));
 
-        mockMvc.perform(put("/api/v1/locations/{id}", 1)
-                        .content(locationRequest)
+        mockMvc.perform(put(BASE_URL + "/{id}", LOCATION_ID)
+                        .content(LOCATION_JSON_SINGLE)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
     }
 
@@ -171,16 +141,12 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void deleteLocationById() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         doNothing().when(locationService).deleteLocation(anyLong());
 
-        mockMvc.perform(delete("/api/v1/locations/{id}", 1)
-                        .header("Authorization", token))
+        mockMvc.perform(delete(BASE_URL + "/{id}", LOCATION_ID)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
-    }
-
-    private LocationRequest createLocationRequest(String slug, String name) {
-        return new LocationRequest(slug, name);
     }
 
 }

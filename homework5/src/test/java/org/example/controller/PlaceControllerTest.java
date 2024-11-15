@@ -5,7 +5,11 @@
 //import org.example.dto.request.PlaceDetailsRequest;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.http.MediaType;
+//import org.springframework.test.context.jdbc.Sql;
 //
+//import static org.example.MockObjects.placeDetailsRequest;
+//import static org.example.MockObjects.updatedPlaceDetailsRequest;
+//import static org.example.MockObjects.userLoginRequest;
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 //import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -17,79 +21,112 @@
 //public class PlaceControllerTest extends AbstractTestContainer {
 //
 //    private static final String BASE_URL = "/api/v1/places";
+//    private static final String AUTHORIZATION_HEADER = "Authorization";
+//    private static final String BEARER_PREFIX = "Bearer ";
+//    private static final String NAME_JSON_PATH = "$.name";
+//    private static final String ID_URL_PATH = "/1";
+//    private static final String PLACE_NAME = "Test Place";
+//    private static final String UPDATED_PLACE_NAME = "Updated Place";
 //
 //    @Test
+//    @Sql({
+//            "classpath:db/insert-data.sql",
+//    })
+//    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 //    public void shouldCreateAndReturnPlace() throws Exception {
-//        var placeDetailsRequest = new PlaceDetailsRequest("Test Place");
+//        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+//
 //        var requestJson = objectMapper.writeValueAsString(placeDetailsRequest);
 //
 //        mockMvc.perform(post(BASE_URL)
 //                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(requestJson))
+//                        .content(requestJson)
+//                        .header(AUTHORIZATION_HEADER, token))
 //                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.name").value("Test Place"));
+//                .andExpect(jsonPath(NAME_JSON_PATH).value(PLACE_NAME));
 //
-//        mockMvc.perform(get(BASE_URL + "/1"))
+//        mockMvc.perform(get(BASE_URL + ID_URL_PATH))
 //                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.name").value("Test Place"));
+//                .andExpect(jsonPath(NAME_JSON_PATH).value(PLACE_NAME));
 //    }
 //
 //    @Test
+//    @Sql({
+//            "classpath:db/insert-data.sql",
+//    })
+//    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 //    public void shouldUpdatePlace() throws Exception {
-//        var createRequest = new PlaceDetailsRequest("Test Place");
-//        var createRequestJson = objectMapper.writeValueAsString(createRequest);
+//        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+//        var createRequestJson = objectMapper.writeValueAsString(placeDetailsRequest);
 //
 //        mockMvc.perform(post(BASE_URL)
 //                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(createRequestJson))
+//                        .content(createRequestJson)
+//                        .header(AUTHORIZATION_HEADER, token))
 //                .andExpect(status().isOk());
 //
-//        var updateRequest = new PlaceDetailsRequest("Updated Place");
-//        var updateRequestJson = objectMapper.writeValueAsString(updateRequest);
+//        var updateRequestJson = objectMapper.writeValueAsString(updatedPlaceDetailsRequest);
 //
-//        mockMvc.perform(put(BASE_URL + "/1")
+//        mockMvc.perform(put(BASE_URL + ID_URL_PATH)
 //                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(updateRequestJson))
+//                        .content(updateRequestJson)
+//                        .header(AUTHORIZATION_HEADER, token))
 //                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.name").value("Updated Place"));
+//                .andExpect(jsonPath(NAME_JSON_PATH).value(UPDATED_PLACE_NAME));
 //    }
 //
 //    @Test
+//    @Sql({
+//            "classpath:db/insert-data.sql",
+//    })
+//    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 //    public void shouldGetAllPlaces() throws Exception {
-//        mockMvc.perform(get(BASE_URL))
+//        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+//        mockMvc.perform(get(BASE_URL)
+//                        .header(AUTHORIZATION_HEADER, token))
 //                .andExpect(status().isOk())
 //                .andExpect(jsonPath("$").isArray());
 //    }
 //
 //    @Test
+//    @Sql({
+//            "classpath:db/insert-data.sql",
+//    })
+//    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 //    public void shouldGetPlaceById() throws Exception {
-//        var placeDetailsRequest = new PlaceDetailsRequest("Test Place");
+//        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 //        var requestJson = objectMapper.writeValueAsString(placeDetailsRequest);
 //
 //        mockMvc.perform(post(BASE_URL)
 //                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(requestJson))
+//                        .content(requestJson)
+//                        .header(AUTHORIZATION_HEADER, token))
 //                .andExpect(status().isOk());
 //
-//        mockMvc.perform(get(BASE_URL + "/1"))
+//        mockMvc.perform(get(BASE_URL + ID_URL_PATH))
 //                .andExpect(status().isOk())
-//                .andExpect(jsonPath("$.name").value("Test Place"));
+//                .andExpect(jsonPath(NAME_JSON_PATH).value(PLACE_NAME));
 //    }
 //
 //    @Test
+//    @Sql({
+//            "classpath:db/insert-data.sql",
+//    })
+//    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 //    public void shouldDeletePlace() throws Exception {
-//        var placeDetailsRequest = new PlaceDetailsRequest("Test Place");
+//        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 //        var requestJson = objectMapper.writeValueAsString(placeDetailsRequest);
 //
 //        mockMvc.perform(post(BASE_URL)
 //                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(requestJson))
+//                        .content(requestJson)
+//                        .header(AUTHORIZATION_HEADER, token))
 //                .andExpect(status().isOk());
 //
-//        mockMvc.perform(delete(BASE_URL + "/1"))
+//        mockMvc.perform(delete(BASE_URL + ID_URL_PATH))
 //                .andExpect(status().isOk());
 //
-//        mockMvc.perform(get(BASE_URL + "/1"))
+//        mockMvc.perform(get(BASE_URL + ID_URL_PATH))
 //                .andExpect(status().isNotFound());
 //    }
 //

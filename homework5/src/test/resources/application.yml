@@ -27,14 +27,14 @@ server:
 
 spring:
   datasource:
-    hikari:
-      connection-test-query: SELECT 1
-      connection-timeout: 600000
-      maximum-pool-size: 500
-      max-lifetime: 1800000
-      minimum-idle: 20
-      validation-timeout: 3000
-      idle-timeout: 60000
+    url: jdbc:tc:postgresql:11.1://test_db
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: update
+  liquibase:
+    change-log: liquibase/test-changelog.xml
 
 jwt:
   secret-key: ${JWT_SECRET_KEY:FEAA575643235CF7B954951CC2D9EC14178D373DA120612792DBC905062CD0D8}
