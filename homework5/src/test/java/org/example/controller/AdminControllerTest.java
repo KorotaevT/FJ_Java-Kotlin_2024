@@ -2,6 +2,11 @@ package org.example.controller;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.test.context.jdbc.Sql;
+
+import static org.example.MockObjects.ADMIN_CHECK_RESPONSE;
+import static org.example.MockObjects.API_ADMIN;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
 import static org.example.MockObjects.adminLoginRequest;
 import static org.example.MockObjects.userLoginRequest;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,10 +18,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 public class AdminControllerTest extends AbstractTestContainer {
 
-    public static final String API_ADMIN = "/api/v1/admin";
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-
     @Test
     @Sql({
             "classpath:db/insert-data.sql",
@@ -27,7 +28,7 @@ public class AdminControllerTest extends AbstractTestContainer {
         mockMvc.perform(get(API_ADMIN)
                         .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Admin check"));
+                .andExpect(content().string(ADMIN_CHECK_RESPONSE));
     }
 
     @Test

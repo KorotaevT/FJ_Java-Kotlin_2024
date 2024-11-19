@@ -20,9 +20,18 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.example.MockObjects.EKATERINBURG_NAME;
+import static org.example.MockObjects.EKATERINBURG_SLUG;
+import static org.example.MockObjects.MOSCOW_NAME;
+import static org.example.MockObjects.MOSCOW_SLUG;
+import static org.example.MockObjects.createLocation;
+import static org.example.MockObjects.createLocationRequest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class LocationServiceTest {
@@ -30,53 +39,54 @@ class LocationServiceTest {
     @Mock
     private CustomRepository<Location> repository;
 
+    @Mock
+    private Observer<Location> observer;
+
     @InjectMocks
     private LocationService locationService;
 
     @Test
     void testGetAllLocations() {
-        Location moscowLocation = createLocation("msk", "Москва");
-        Location kazanLocation = createLocation("ekb", "Екатеринбург");
+        Location moscowLocation = createLocation(MOSCOW_SLUG, MOSCOW_NAME);
+        Location kazanLocation = createLocation(EKATERINBURG_SLUG, EKATERINBURG_NAME);
+
         when(repository.findAll()).thenReturn(Arrays.asList(moscowLocation, kazanLocation));
 
         Collection<LocationRequest> result = locationService.getAllLocations();
 
         Iterator<LocationRequest> iterator = result.iterator();
-
-        assertThat(iterator.next().getName()).isEqualTo("Москва");
-        assertThat(iterator.next().getSlug()).isEqualTo("ekb");
+        assertThat(iterator.next().getName()).isEqualTo(MOSCOW_NAME);
+        assertThat(iterator.next().getSlug()).isEqualTo(EKATERINBURG_SLUG);
     }
 
     @Test
     void testGetLocationById() {
-        Location moscowLocation = createLocation("msk", "Москва");
+        Location moscowLocation = createLocation(MOSCOW_SLUG, MOSCOW_NAME);
         when(repository.findById(1L)).thenReturn(moscowLocation);
 
         LocationRequest result = locationService.getLocationById(1L);
 
-        assertThat(result.getName()).isEqualTo("Москва");
+        assertThat(result.getName()).isEqualTo(MOSCOW_NAME);
     }
 
     @Test
     void testCreateLocation() {
         ObservableImpl<Location> observable = new ObservableImpl<>();
-        Observer<Location> observerMock = mock(Observer.class);
-        observable.addObserver(observerMock);
+        observable.addObserver(observer);
 
-        LocationRequest request = new LocationRequest("msk", "Москва");
+        LocationRequest request = new LocationRequest(MOSCOW_SLUG, MOSCOW_NAME);
         Location location = new Location(request.getSlug(), request.getName());
 
         observable.notifyObservers(location);
 
-        verify(observerMock, times(1)).update(any(Location.class));
+        verify(observer, times(1)).update(any(Location.class));
     }
-
 
     @Test
     void testCreateLocationDuringInitialize() {
         LocationResponse request = new LocationResponse();
-        request.setSlug("msk");
-        request.setName("Москва");
+        request.setSlug(MOSCOW_SLUG);
+        request.setName(MOSCOW_NAME);
 
         locationService.createLocation(request);
 
@@ -87,13 +97,13 @@ class LocationServiceTest {
         assertThat(capturedLocations).hasSize(1);
 
         Location capturedLocation = capturedLocations.getFirst();
-        assertThat(capturedLocation.getSlug()).isEqualTo("msk");
-        assertThat(capturedLocation.getName()).isEqualTo("Москва");
+        assertThat(capturedLocation.getSlug()).isEqualTo(MOSCOW_SLUG);
+        assertThat(capturedLocation.getName()).isEqualTo(MOSCOW_NAME);
     }
 
     @Test
     void testUpdateLocationById() {
-        LocationRequest request = createLocationRequest("msk", "Москва");
+        LocationRequest request = createLocationRequest(MOSCOW_SLUG, MOSCOW_NAME);
 
         locationService.updateLocation(1L, request);
 
@@ -104,8 +114,8 @@ class LocationServiceTest {
         assertThat(capturedLocations).hasSize(1);
 
         Location capturedLocation = capturedLocations.getFirst();
-        assertThat(capturedLocation.getName()).isEqualTo("Москва");
-        assertThat(capturedLocation.getSlug()).isEqualTo("msk");
+        assertThat(capturedLocation.getName()).isEqualTo(MOSCOW_NAME);
+        assertThat(capturedLocation.getSlug()).isEqualTo(MOSCOW_SLUG);
     }
 
     @Test
@@ -126,7 +136,7 @@ class LocationServiceTest {
 
     @Test
     void testUpdateLocationByNonExistentId() {
-        LocationRequest request = createLocationRequest("msk", "Москва");
+        LocationRequest request = createLocationRequest(MOSCOW_SLUG, MOSCOW_NAME);
         doThrow(new IllegalArgumentException()).when(repository).update(eq(1L), any(Location.class));
 
         assertThatThrownBy(() -> locationService.updateLocation(1L, request))
@@ -139,14 +149,6 @@ class LocationServiceTest {
 
         assertThatThrownBy(() -> locationService.deleteLocation(1L))
                 .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    private Location createLocation(String slug, String name) {
-        return new Location(slug, name);
-    }
-
-    private LocationRequest createLocationRequest(String slug, String name) {
-        return new LocationRequest(slug, name);
     }
 
 }

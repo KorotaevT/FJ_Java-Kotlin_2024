@@ -9,6 +9,9 @@ import org.springframework.test.context.jdbc.Sql;
 
 import java.util.List;
 
+import static org.example.MockObjects.API_LOCATIONS;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
 import static org.example.MockObjects.INVALID_LOCATION_JSON;
 import static org.example.MockObjects.LOCATION_JSON;
 import static org.example.MockObjects.LOCATION_JSON_SINGLE;
@@ -31,12 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 public class LocationControllerTest extends AbstractTestContainer {
 
-    private static final String BASE_URL = "/api/v1/locations";
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-
-    private static final long LOCATION_ID = 1;
-    private static final long NON_EXISTENT_LOCATION_ID = 999;
+    private String getAuthToken() {
+        return BEARER_PREFIX + authService.authenticate(userLoginRequest);
+    }
 
     @Test
     @Sql({
@@ -44,12 +44,12 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getAllLocations() throws Exception {
-        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        var token = getAuthToken();
         List<LocationRequest> locations = getLocations();
 
         when(locationService.getAllLocations()).thenReturn(locations);
 
-        mockMvc.perform(get(BASE_URL)
+        mockMvc.perform(get(API_LOCATIONS)
                         .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
                 .andExpect(content().json(LOCATION_JSON));
@@ -61,12 +61,12 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getLocationById() throws Exception {
-        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        var token = getAuthToken();
         LocationRequest location = createLocationRequest("msk", "Москва");
 
         when(locationService.getLocationById(anyLong())).thenReturn(location);
 
-        mockMvc.perform(get(BASE_URL + "/{id}", LOCATION_ID)
+        mockMvc.perform(get(API_LOCATIONS + "/{id}", 1)
                         .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
                 .andExpect(content().json(LOCATION_JSON_SINGLE));
@@ -78,10 +78,10 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getLocationByNonExistentId() throws Exception {
-        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        var token = getAuthToken();
         when(locationService.getLocationById(anyLong())).thenReturn(null);
 
-        mockMvc.perform(get(BASE_URL + "/{id}", NON_EXISTENT_LOCATION_ID)
+        mockMvc.perform(get(API_LOCATIONS + "/{id}", 999)
                         .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isNotFound());
     }
@@ -92,9 +92,9 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void createLocation() throws Exception {
-        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        var token = getAuthToken();
 
-        mockMvc.perform(post(BASE_URL)
+        mockMvc.perform(post(API_LOCATIONS)
                         .content(LOCATION_JSON_SINGLE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(AUTHORIZATION_HEADER, token))
@@ -109,9 +109,9 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void createLocation_InvalidRequest() throws Exception {
-        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        var token = getAuthToken();
 
-        mockMvc.perform(post(BASE_URL)
+        mockMvc.perform(post(API_LOCATIONS)
                         .content(INVALID_LOCATION_JSON)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(AUTHORIZATION_HEADER, token))
@@ -124,11 +124,11 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void updateLocationById() throws Exception {
-        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        var token = getAuthToken();
 
         doNothing().when(locationService).updateLocation(anyLong(), any(LocationRequest.class));
 
-        mockMvc.perform(put(BASE_URL + "/{id}", LOCATION_ID)
+        mockMvc.perform(put(API_LOCATIONS + "/{id}", 1)
                         .content(LOCATION_JSON_SINGLE)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(AUTHORIZATION_HEADER, token))
@@ -141,10 +141,10 @@ public class LocationControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void deleteLocationById() throws Exception {
-        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        var token = getAuthToken();
         doNothing().when(locationService).deleteLocation(anyLong());
 
-        mockMvc.perform(delete(BASE_URL + "/{id}", LOCATION_ID)
+        mockMvc.perform(delete(API_LOCATIONS + "/{id}", 1)
                         .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
     }

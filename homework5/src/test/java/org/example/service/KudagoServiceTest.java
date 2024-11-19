@@ -19,6 +19,26 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.example.MockObjects.AIRPORTS_NAME;
+import static org.example.MockObjects.AIRPORTS_SLUG;
+import static org.example.MockObjects.AMUSEMENT_NAME;
+import static org.example.MockObjects.AMUSEMENT_SLUG;
+import static org.example.MockObjects.ANIMAL_SHELTERS_NAME;
+import static org.example.MockObjects.ANIMAL_SHELTERS_SLUG;
+import static org.example.MockObjects.EKATERINBURG_NAME;
+import static org.example.MockObjects.EKATERINBURG_SLUG;
+import static org.example.MockObjects.KAZAN_NAME;
+import static org.example.MockObjects.KAZAN_SLUG;
+import static org.example.MockObjects.MOSCOW_NAME;
+import static org.example.MockObjects.MOSCOW_SLUG;
+import static org.example.MockObjects.NIZHNY_NOVGOROD_NAME;
+import static org.example.MockObjects.NIZHNY_NOVGOROD_SLUG;
+import static org.example.MockObjects.ST_PETERSBURG_NAME;
+import static org.example.MockObjects.ST_PETERSBURG_SLUG;
+import static org.example.MockObjects.THEATRE_NAME;
+import static org.example.MockObjects.THEATRE_SLUG;
+import static org.example.MockObjects.WORKSHOPS_NAME;
+import static org.example.MockObjects.WORKSHOPS_SLUG;
 
 @Slf4j
 @ExtendWith({MockitoExtension.class, WireMockExtension.class})
@@ -165,24 +185,24 @@ class KudagoServiceTest {
         assertThat(result).hasSize(5);
 
         assertThat(result[0].getId()).isEqualTo(123);
-        assertThat(result[0].getSlug()).isEqualTo("airports");
-        assertThat(result[0].getName()).isEqualTo("Аэропорты");
+        assertThat(result[0].getSlug()).isEqualTo(AIRPORTS_SLUG);
+        assertThat(result[0].getName()).isEqualTo(AIRPORTS_NAME);
 
         assertThat(result[1].getId()).isEqualTo(89);
-        assertThat(result[1].getSlug()).isEqualTo("amusement");
-        assertThat(result[1].getName()).isEqualTo("Развлечения");
+        assertThat(result[1].getSlug()).isEqualTo(AMUSEMENT_SLUG);
+        assertThat(result[1].getName()).isEqualTo(AMUSEMENT_NAME);
 
         assertThat(result[2].getId()).isEqualTo(114);
-        assertThat(result[2].getSlug()).isEqualTo("animal-shelters");
-        assertThat(result[2].getName()).isEqualTo("Питомники");
+        assertThat(result[2].getSlug()).isEqualTo(ANIMAL_SHELTERS_SLUG);
+        assertThat(result[2].getName()).isEqualTo(ANIMAL_SHELTERS_NAME);
 
         assertThat(result[3].getId()).isEqualTo(48);
-        assertThat(result[3].getSlug()).isEqualTo("theatre");
-        assertThat(result[3].getName()).isEqualTo("Театры");
+        assertThat(result[3].getSlug()).isEqualTo(THEATRE_SLUG);
+        assertThat(result[3].getName()).isEqualTo(THEATRE_NAME);
 
         assertThat(result[4].getId()).isEqualTo(127);
-        assertThat(result[4].getSlug()).isEqualTo("workshops");
-        assertThat(result[4].getName()).isEqualTo("Мастерские");
+        assertThat(result[4].getSlug()).isEqualTo(WORKSHOPS_SLUG);
+        assertThat(result[4].getName()).isEqualTo(WORKSHOPS_NAME);
     }
 
     @Test
@@ -191,20 +211,20 @@ class KudagoServiceTest {
 
         assertThat(result).hasSize(5);
 
-        assertThat(result[0].getSlug()).isEqualTo("ekb");
-        assertThat(result[0].getName()).isEqualTo("Екатеринбург");
+        assertThat(result[0].getSlug()).isEqualTo(EKATERINBURG_SLUG);
+        assertThat(result[0].getName()).isEqualTo(EKATERINBURG_NAME);
 
-        assertThat(result[1].getSlug()).isEqualTo("kzn");
-        assertThat(result[1].getName()).isEqualTo("Казань");
+        assertThat(result[1].getSlug()).isEqualTo(KAZAN_SLUG);
+        assertThat(result[1].getName()).isEqualTo(KAZAN_NAME);
 
-        assertThat(result[2].getSlug()).isEqualTo("msk");
-        assertThat(result[2].getName()).isEqualTo("Москва");
+        assertThat(result[2].getSlug()).isEqualTo(MOSCOW_SLUG);
+        assertThat(result[2].getName()).isEqualTo(MOSCOW_NAME);
 
-        assertThat(result[3].getSlug()).isEqualTo("nnv");
-        assertThat(result[3].getName()).isEqualTo("Нижний Новгород");
+        assertThat(result[3].getSlug()).isEqualTo(NIZHNY_NOVGOROD_SLUG);
+        assertThat(result[3].getName()).isEqualTo(NIZHNY_NOVGOROD_NAME);
 
-        assertThat(result[4].getSlug()).isEqualTo("spb");
-        assertThat(result[4].getName()).isEqualTo("Санкт-Петербург");
+        assertThat(result[4].getSlug()).isEqualTo(ST_PETERSBURG_SLUG);
+        assertThat(result[4].getName()).isEqualTo(ST_PETERSBURG_NAME);
     }
 
 }

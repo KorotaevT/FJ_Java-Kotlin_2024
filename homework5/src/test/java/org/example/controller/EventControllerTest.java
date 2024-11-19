@@ -8,6 +8,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 
+import static org.example.MockObjects.API_EVENTS;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
+import static org.example.MockObjects.EVENT_CREATED_RESPONSE_NAME;
+import static org.example.MockObjects.UPDATED_EVENT_NAME;
 import static org.example.MockObjects.eventDetailsRequest;
 import static org.example.MockObjects.updatedEventDetailsRequest;
 import static org.example.MockObjects.userLoginRequest;
@@ -22,8 +27,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RequiredArgsConstructor
 public class EventControllerTest extends AbstractTestContainer {
 
-    private static final String BASE_URL = "/api/v1/events";
-
     @Test
     @Sql({
             "classpath:db/clear-db.sql",
@@ -31,22 +34,22 @@ public class EventControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldCreateAndReturnEvent() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 
         var requestJson = objectMapper.writeValueAsString(eventDetailsRequest);
 
-        mockMvc.perform(post(BASE_URL)
+        mockMvc.perform(post(API_EVENTS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("event"))
+                .andExpect(jsonPath("$.name").value(EVENT_CREATED_RESPONSE_NAME))
                 .andExpect(jsonPath("$.placeId").value(1));
 
-        var response = mockMvc.perform(get(BASE_URL + "/1")
-                .header("Authorization", token))
+        var response = mockMvc.perform(get(API_EVENTS + "/1")
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("event"))
+                .andExpect(jsonPath("$.name").value(EVENT_CREATED_RESPONSE_NAME))
                 .andReturn();
 
         var responseBody = response.getResponse().getContentAsString();
@@ -54,7 +57,7 @@ public class EventControllerTest extends AbstractTestContainer {
 
         assertThat(createdEvent).isNotNull();
         assertThat(createdEvent.getId()).isNotNull();
-        assertThat(createdEvent.getName()).isEqualTo("event");
+        assertThat(createdEvent.getName()).isEqualTo(EVENT_CREATED_RESPONSE_NAME);
     }
 
     @Test
@@ -63,23 +66,23 @@ public class EventControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldUpdateEvent() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         var createRequestJson = objectMapper.writeValueAsString(eventDetailsRequest);
 
-        mockMvc.perform(post(BASE_URL)
+        mockMvc.perform(post(API_EVENTS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(createRequestJson)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
 
         var updateRequestJson = objectMapper.writeValueAsString(updatedEventDetailsRequest);
 
-        mockMvc.perform(put(BASE_URL + "/1")
+        mockMvc.perform(put(API_EVENTS + "/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(updateRequestJson)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("updatedEvent"));
+                .andExpect(jsonPath("$.name").value(UPDATED_EVENT_NAME));
     }
 
     @Test
@@ -88,9 +91,9 @@ public class EventControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldGetAllEvents() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
-        mockMvc.perform(get(BASE_URL)
-                .header("Authorization", token))
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        mockMvc.perform(get(API_EVENTS)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -101,19 +104,19 @@ public class EventControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldGetEventById() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         var requestJson = objectMapper.writeValueAsString(eventDetailsRequest);
 
-        mockMvc.perform(post(BASE_URL)
+        mockMvc.perform(post(API_EVENTS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get(BASE_URL + "/1")
-                .header("Authorization", token))
+        mockMvc.perform(get(API_EVENTS + "/1")
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("event"));
+                .andExpect(jsonPath("$.name").value(EVENT_CREATED_RESPONSE_NAME));
     }
 
     @Test
@@ -122,20 +125,20 @@ public class EventControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldFilterEvents() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         var requestJson = objectMapper.writeValueAsString(eventDetailsRequest);
 
-        mockMvc.perform(post(BASE_URL)
+        mockMvc.perform(post(API_EVENTS)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestJson)
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get(BASE_URL + "/filter")
+        mockMvc.perform(get(API_EVENTS + "/filter")
                         .param("name", eventDetailsRequest.getName())
-                        .header("Authorization", token))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("event"));
+                .andExpect(jsonPath("$[0].name").value(EVENT_CREATED_RESPONSE_NAME));
     }
 
     @Test
@@ -145,21 +148,21 @@ public class EventControllerTest extends AbstractTestContainer {
     })
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldDeleteEvent() throws Exception {
-        var token = "Bearer " + authService.authenticate(userLoginRequest);
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         var requestJson = objectMapper.writeValueAsString(eventDetailsRequest);
 
-        mockMvc.perform(post(BASE_URL)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestJson)
-                .header("Authorization", token))
+        mockMvc.perform(post(API_EVENTS)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete(BASE_URL + "/1")
-                .header("Authorization", token))
+        mockMvc.perform(delete(API_EVENTS + "/1")
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(get(BASE_URL + "/1")
-                .header("Authorization", token))
+        mockMvc.perform(get(API_EVENTS + "/1")
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isNotFound());
     }
 

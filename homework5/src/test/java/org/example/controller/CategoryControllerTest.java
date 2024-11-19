@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.example.dto.request.CategoryRequest;
 
+import static org.example.MockObjects.API_CATEGORIES;
+import static org.example.MockObjects.API_CATEGORY_BY_ID;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
 import static org.example.MockObjects.CATEGORY_JSON;
 import static org.example.MockObjects.CATEGORY_JSON_SINGLE;
 import static org.example.MockObjects.INVALID_CATEGORY_JSON;
@@ -27,11 +31,6 @@ import org.springframework.test.context.jdbc.Sql;
 
 @RequiredArgsConstructor
 public class CategoryControllerTest extends AbstractTestContainer {
-
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-    private static final String API_CATEGORIES = "/api/v1/places/categories";
-    private static final String API_CATEGORY_BY_ID = "/api/v1/places/categories/{id}";
 
     @Test
     @Sql({

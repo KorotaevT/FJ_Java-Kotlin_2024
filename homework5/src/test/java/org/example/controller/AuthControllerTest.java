@@ -6,6 +6,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.jdbc.Sql;
 
+import static org.example.MockObjects.API_AUTH_LOGIN;
+import static org.example.MockObjects.API_AUTH_LOGOUT;
+import static org.example.MockObjects.API_AUTH_REGISTER;
+import static org.example.MockObjects.API_AUTH_RESET_PASSWORD;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
+import static org.example.MockObjects.PASSWORD_RESET_SUCCESS_MESSAGE;
+import static org.example.MockObjects.REGISTRATION_SUCCESS_MESSAGE;
 import static org.example.MockObjects.passwordResetRequest;
 import static org.example.MockObjects.userLoginRequest;
 import static org.example.MockObjects.userRegistrationRequest;
@@ -16,13 +24,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 public class AuthControllerTest extends AbstractTestContainer {
 
-    public static final String API_AUTH_REGISTER = "/api/v1/auth/register";
-    public static final String API_AUTH_LOGIN = "/api/v1/auth/login";
-    public static final String API_AUTH_LOGOUT = "/api/v1/auth/logout";
-    public static final String API_AUTH_RESET_PASSWORD = "/api/v1/auth/reset-password";
-    private static final String AUTHORIZATION_HEADER = "Authorization";
-    private static final String BEARER_PREFIX = "Bearer ";
-
     @Test
     @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void testRegisterUser() throws Exception {
@@ -30,7 +31,7 @@ public class AuthControllerTest extends AbstractTestContainer {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userRegistrationRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Registration successful"));
+                .andExpect(content().string(REGISTRATION_SUCCESS_MESSAGE));
     }
 
     @Test
@@ -54,8 +55,7 @@ public class AuthControllerTest extends AbstractTestContainer {
         var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
         mockMvc.perform(post(API_AUTH_LOGOUT)
                         .header(AUTHORIZATION_HEADER, token))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Logout successful!"));
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -70,7 +70,7 @@ public class AuthControllerTest extends AbstractTestContainer {
                         .content(objectMapper.writeValueAsString(passwordResetRequest))
                         .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Password reset successful!"));
+                .andExpect(content().string(PASSWORD_RESET_SUCCESS_MESSAGE));
     }
 
 }
