@@ -1,6 +1,5 @@
 package org.example.service;
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.config.mapper.EventMapper;
 import org.example.dto.response.EventEntityResponse;
@@ -8,6 +7,7 @@ import org.example.dto.request.EventDetailsRequest;
 import org.example.dto.request.EventRequest;
 import org.example.dto.response.EventKudagoDates;
 import org.example.dto.response.EventKudagoResult;
+import org.example.exceptions.EntityNotFoundException;
 import org.example.exceptions.RelatedEntityNotFoundException;
 import org.example.model.Event;
 import org.example.repository.EventRepository;

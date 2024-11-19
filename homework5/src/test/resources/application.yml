@@ -5,7 +5,7 @@ rest:
     connect-timeout: 120s
     maximum-number-concurrent-requests: 5
   spring-app-currency:
-    url: ${REST_CURRENCY_URL:http://localhost:8080/currency}
+    url: ${REST_CURRENCY_URL:http://localhost:8081/currency}
     read-timeout: 120s
     connect-timeout: 120s
 

@@ -1,6 +1,6 @@
 package org.example.service;
 
-import jakarta.persistence.EntityNotFoundException;
+import org.example.exceptions.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.example.config.mapper.PlaceMapper;
 import org.example.dto.response.PlaceResponse;
@@ -29,6 +29,7 @@ public class PlaceService {
 
 
     public PlaceResponse getPlaceById(Long id) {
+        var a = placeRepository.findAll();
         return placeRepository
                 .findByIdWithEvents(id)
                 .map(placeMapper::toResponse)
