@@ -2,10 +2,20 @@ package org.example.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.example.AbstractTestContainer;
-import org.example.dto.request.PlaceDetailsRequest;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.jdbc.Sql;
 
+import static org.example.MockObjects.API_PLACES;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
+import static org.example.MockObjects.ID_URL_PATH;
+import static org.example.MockObjects.NAME_JSON_PATH;
+import static org.example.MockObjects.PLACE_NAME;
+import static org.example.MockObjects.UPDATED_PLACE_NAME;
+import static org.example.MockObjects.placeDetailsRequest;
+import static org.example.MockObjects.updatedPlaceDetailsRequest;
+import static org.example.MockObjects.userLoginRequest;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -16,80 +26,97 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 public class PlaceControllerTest extends AbstractTestContainer {
 
-    private static final String BASE_URL = "/api/v1/places";
+    private String getAuthToken() {
+        return BEARER_PREFIX + authService.authenticate(userLoginRequest);
+    }
 
-    @Test
-    public void shouldCreateAndReturnPlace() throws Exception {
-        var placeDetailsRequest = new PlaceDetailsRequest("Test Place");
+    private void createPlace(String token) throws Exception {
         var requestJson = objectMapper.writeValueAsString(placeDetailsRequest);
-
-        mockMvc.perform(post(BASE_URL)
+        mockMvc.perform(post(API_PLACES)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test Place"));
-
-        mockMvc.perform(get(BASE_URL + "/1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test Place"));
-    }
-
-    @Test
-    public void shouldUpdatePlace() throws Exception {
-        var createRequest = new PlaceDetailsRequest("Test Place");
-        var createRequestJson = objectMapper.writeValueAsString(createRequest);
-
-        mockMvc.perform(post(BASE_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(createRequestJson))
+                        .content(requestJson)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
-
-        var updateRequest = new PlaceDetailsRequest("Updated Place");
-        var updateRequestJson = objectMapper.writeValueAsString(updateRequest);
-
-        mockMvc.perform(put(BASE_URL + "/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(updateRequestJson))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Updated Place"));
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void shouldCreateAndReturnPlace() throws Exception {
+        var token = getAuthToken();
+
+        createPlace(token);
+
+        mockMvc.perform(get(API_PLACES + "/3")
+                        .header(AUTHORIZATION_HEADER, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(NAME_JSON_PATH).value(PLACE_NAME));
+    }
+
+    @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    public void shouldUpdatePlace() throws Exception {
+        var token = getAuthToken();
+
+        createPlace(token);
+
+        var updateRequestJson = objectMapper.writeValueAsString(updatedPlaceDetailsRequest);
+        mockMvc.perform(put(API_PLACES + ID_URL_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updateRequestJson)
+                        .header(AUTHORIZATION_HEADER, token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath(NAME_JSON_PATH).value(UPDATED_PLACE_NAME));
+    }
+
+    @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldGetAllPlaces() throws Exception {
-        mockMvc.perform(get(BASE_URL))
+        var token = getAuthToken();
+        mockMvc.perform(get(API_PLACES)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldGetPlaceById() throws Exception {
-        var placeDetailsRequest = new PlaceDetailsRequest("Test Place");
-        var requestJson = objectMapper.writeValueAsString(placeDetailsRequest);
+        var token = getAuthToken();
 
-        mockMvc.perform(post(BASE_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get(BASE_URL + "/1"))
+        mockMvc.perform(get(API_PLACES + ID_URL_PATH)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Test Place"));
+                .andExpect(jsonPath(NAME_JSON_PATH).value("place1"));
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void shouldDeletePlace() throws Exception {
-        var placeDetailsRequest = new PlaceDetailsRequest("Test Place");
-        var requestJson = objectMapper.writeValueAsString(placeDetailsRequest);
+        var token = getAuthToken();
 
-        mockMvc.perform(post(BASE_URL)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(requestJson))
+        createPlace(token);
+
+        mockMvc.perform(delete(API_PLACES + ID_URL_PATH)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(delete(BASE_URL + "/1"))
-                .andExpect(status().isOk());
-
-        mockMvc.perform(get(BASE_URL + "/1"))
+        mockMvc.perform(get(API_PLACES + ID_URL_PATH)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isNotFound());
     }
 

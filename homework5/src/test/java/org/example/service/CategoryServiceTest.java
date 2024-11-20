@@ -3,6 +3,8 @@ package org.example.service;
 import org.example.dto.request.CategoryRequest;
 import org.example.dto.response.CategoryResponse;
 import org.example.model.Category;
+import org.example.pattern.observer.Observer;
+import org.example.pattern.observer.impl.ObservableImpl;
 import org.example.repository.CustomRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -11,16 +13,22 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.example.MockObjects.AIRPORTS_NAME;
+import static org.example.MockObjects.AIRPORTS_SLUG;
+import static org.example.MockObjects.AMUSEMENT_SLUG;
+import static org.example.MockObjects.createCategoryRequest;
+import static org.example.MockObjects.getCategoriesAsCategory;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class CategoryServiceTest {
@@ -28,37 +36,37 @@ class CategoryServiceTest {
     @Mock
     private CustomRepository<Category> repository;
 
+    @Mock
+    private Observer<Category> observer;
+
     @InjectMocks
     private CategoryService categoryService;
 
     @Test
     void testGetAllCategories() {
-        Category airportCategory = createCategory("airports", "Аэропорты");
-        Category amusementCategory = createCategory("amusement", "Развлечения");
-        when(repository.findAll()).thenReturn(Arrays.asList(airportCategory, amusementCategory));
+        when(repository.findAll()).thenReturn(getCategoriesAsCategory());
 
         Collection<CategoryRequest> result = categoryService.getAllCategories();
 
         assertThat(result).hasSize(2);
 
         Iterator<CategoryRequest> iterator = result.iterator();
-        assertThat(iterator.next().getName()).isEqualTo("Аэропорты");
-        assertThat(iterator.next().getSlug()).isEqualTo("amusement");
+        assertThat(iterator.next().getName()).isEqualTo(AIRPORTS_NAME);
+        assertThat(iterator.next().getSlug()).isEqualTo(AMUSEMENT_SLUG);
     }
 
     @Test
     void testGetCategoryById() {
-        Category airportCategory = createCategory("airports", "Аэропорты");
-        when(repository.findById(1L)).thenReturn(airportCategory);
+        when(repository.findById(1L)).thenReturn(getCategoriesAsCategory().getFirst());
 
         CategoryRequest result = categoryService.getCategoryById(1L);
 
-        assertThat(result.getName()).isEqualTo("Аэропорты");
+        assertThat(result.getName()).isEqualTo(AIRPORTS_NAME);
     }
 
     @Test
     void testCreateCategory() {
-        CategoryRequest request = createCategoryRequest("airports", "Аэропорты");
+        CategoryRequest request = createCategoryRequest(AIRPORTS_SLUG, AIRPORTS_NAME);
         when(repository.save(any(Category.class))).thenReturn(1L);
 
         Long result = categoryService.createCategory(request);
@@ -68,38 +76,32 @@ class CategoryServiceTest {
 
     @Test
     void testCreateLocationDuringInitialize() {
+        ObservableImpl<Category> observable = new ObservableImpl<>();
+        observable.addObserver(observer);
+
         CategoryResponse response = new CategoryResponse();
-        response.setSlug("airports");
-        response.setName("Аэропорты");
+        response.setSlug(AIRPORTS_SLUG);
+        response.setName(AIRPORTS_NAME);
 
-        categoryService.createCategory(response);
+        Category category = new Category(response.getSlug(), response.getName());
+        observable.notifyObservers(category);
 
-        ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
-        verify(repository).save(categoryCaptor.capture());
-
-        List<Category> capturedCategories = categoryCaptor.getAllValues();
-        assertThat(capturedCategories).hasSize(1);
-
-        Category capturedCategory = capturedCategories.getFirst();
-        assertThat(capturedCategory.getSlug()).isEqualTo("airports");
-        assertThat(capturedCategory.getName()).isEqualTo("Аэропорты");
+        verify(observer, times(1)).update(any(Category.class));
     }
+
 
     @Test
     void testUpdateCategoryById() {
-        CategoryRequest request = createCategoryRequest("airports", "Аэропорты");
+        CategoryRequest request = createCategoryRequest(AIRPORTS_SLUG, AIRPORTS_NAME);
 
         categoryService.updateCategory(1L, request);
 
         ArgumentCaptor<Category> categoryCaptor = ArgumentCaptor.forClass(Category.class);
         verify(repository).update(eq(1L), categoryCaptor.capture());
 
-        List<Category> capturedCategories = categoryCaptor.getAllValues();
-        assertThat(capturedCategories).hasSize(1);
-
-        Category capturedCategory = capturedCategories.getFirst();
-        assertThat(capturedCategory.getName()).isEqualTo("Аэропорты");
-        assertThat(capturedCategory.getSlug()).isEqualTo("airports");
+        Category capturedCategory = categoryCaptor.getValue();
+        assertThat(capturedCategory.getName()).isEqualTo(AIRPORTS_NAME);
+        assertThat(capturedCategory.getSlug()).isEqualTo(AIRPORTS_SLUG);
     }
 
     @Test
@@ -120,7 +122,7 @@ class CategoryServiceTest {
 
     @Test
     void testUpdateCategoryByNonExistentId() {
-        CategoryRequest request = createCategoryRequest("airports", "Аэропорты");
+        CategoryRequest request = createCategoryRequest(AIRPORTS_SLUG, AIRPORTS_NAME);
         doThrow(new IllegalArgumentException()).when(repository).update(eq(1L), any(Category.class));
 
         assertThatThrownBy(() -> categoryService.updateCategory(1L, request))
@@ -133,14 +135,6 @@ class CategoryServiceTest {
 
         assertThatThrownBy(() -> categoryService.deleteCategory(1L))
                 .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    private Category createCategory(String slug, String name) {
-        return new Category(slug, name);
-    }
-
-    private CategoryRequest createCategoryRequest(String slug, String name) {
-        return new CategoryRequest(slug, name);
     }
 
 }

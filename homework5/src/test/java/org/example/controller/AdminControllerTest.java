@@ -1,38 +1,46 @@
 package org.example.controller;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.jdbc.Sql;
+
+import static org.example.MockObjects.ADMIN_CHECK_RESPONSE;
+import static org.example.MockObjects.API_ADMIN;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
+import static org.example.MockObjects.adminLoginRequest;
+import static org.example.MockObjects.userLoginRequest;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import lombok.RequiredArgsConstructor;
 import org.example.AbstractTestContainer;
-import org.springframework.test.annotation.DirtiesContext;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @RequiredArgsConstructor
 public class AdminControllerTest extends AbstractTestContainer {
 
-    @Autowired
-    private MockMvc mockMvc;
-
     @Test
-    @DirtiesContext
-    @WithMockUser(username = "admin", roles = {"ADMIN"})
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void testGetAdminInfo() throws Exception {
-        mockMvc.perform(get("/api/v1/admin"))
+        var token = BEARER_PREFIX + authService.authenticate(adminLoginRequest);
+        mockMvc.perform(get(API_ADMIN)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Admin check"));
+                .andExpect(content().string(ADMIN_CHECK_RESPONSE));
     }
 
     @Test
-    @DirtiesContext
-    @WithMockUser(username = "user", roles = {"USER"})
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void testGetAdminInfoForbidden() throws Exception {
-        mockMvc.perform(get("/api/v1/admin"))
-                .andExpect(status().isForbidden())
-                .andExpect(content().string("Forbidden"));
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        mockMvc.perform(get(API_ADMIN)
+                        .header(AUTHORIZATION_HEADER, token))
+                .andExpect(status().isForbidden());
     }
 
 }

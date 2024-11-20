@@ -1,15 +1,21 @@
 package org.example.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.example.AbstractTestContainer;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.example.dto.request.CategoryRequest;
 
-import lombok.RequiredArgsConstructor;
-
-import java.util.Arrays;
-import java.util.List;
-
+import static org.example.MockObjects.API_CATEGORIES;
+import static org.example.MockObjects.API_CATEGORY_BY_ID;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
+import static org.example.MockObjects.CATEGORY_JSON;
+import static org.example.MockObjects.CATEGORY_JSON_SINGLE;
+import static org.example.MockObjects.INVALID_CATEGORY_JSON;
+import static org.example.MockObjects.createCategoryRequest;
+import static org.example.MockObjects.getCategories;
+import static org.example.MockObjects.userLoginRequest;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doNothing;
@@ -21,122 +27,125 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.springframework.test.context.jdbc.Sql;
+
 @RequiredArgsConstructor
 public class CategoryControllerTest extends AbstractTestContainer {
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getAllCategories() throws Exception {
-        List<CategoryRequest> categories = Arrays.asList(
-                createCategoryRequest("airports", "Аэропорты"),
-                createCategoryRequest("amusement", "Развлечения")
-        );
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+
+        var categories = getCategories();
 
         when(categoryService.getAllCategories()).thenReturn(categories);
 
-        mockMvc.perform(get("/api/v1/places/categories"))
+        mockMvc.perform(get(API_CATEGORIES)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().json(
-                        """
-                                [
-                                {
-                                    "slug": "airports",
-                                    "name": "Аэропорты"
-                                },
-                                {
-                                    "slug": "amusement",
-                                    "name": "Развлечения"
-                                }
-                                ]
-                                """
-                ));
+                .andExpect(content().json(CATEGORY_JSON));
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getCategoryById() throws Exception {
-        CategoryRequest request = createCategoryRequest("airports", "Аэропорты");
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+
+        var request = createCategoryRequest("airports", "Аэропорты");
 
         when(categoryService.getCategoryById(anyLong())).thenReturn(request);
 
-        mockMvc.perform(get("/api/v1/places/categories/{id}", 1))
+        mockMvc.perform(get(API_CATEGORY_BY_ID, 1)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().json(
-                        """
-                                {
-                                    "slug": "airports",
-                                    "name": "Аэропорты"
-                                }
-                                """
-                ));
+                .andExpect(content().json(CATEGORY_JSON_SINGLE));
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void getCategoryByNonExistentId() throws Exception {
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+
         when(categoryService.getCategoryById(anyLong())).thenReturn(null);
 
-        mockMvc.perform(get("/api/v1/places/categories/{id}", 999))
+        mockMvc.perform(get(API_CATEGORY_BY_ID, 999)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isNotFound());
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void createCategory() throws Exception {
-        String categoryRequest = """
-                {
-                    "slug": "airports",
-                    "name": "Аэропорты"
-                }
-                """;
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 
         when(categoryService.createCategory(any(CategoryRequest.class))).thenReturn(1L);
 
-        mockMvc.perform(post("/api/v1/places/categories")
-                        .content(categoryRequest)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(API_CATEGORIES)
+                        .content(CATEGORY_JSON_SINGLE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
                 .andExpect(content().string("1"));
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void createCategory_InvalidRequest() throws Exception {
-        String invalidCategoryRequest = """
-                {
-                    "slug": "",
-                    "name": ""
-                }
-                """;
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 
-        mockMvc.perform(post("/api/v1/places/categories")
-                        .content(invalidCategoryRequest)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(post(API_CATEGORIES)
+                        .content(INVALID_CATEGORY_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void updateCategoryById() throws Exception {
-        String categoryRequest = """
-                {
-                    "slug": "airports",
-                    "name": "Аэропорты"
-                }
-                """;
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
 
         doNothing().when(categoryService).updateCategory(anyLong(), any(CategoryRequest.class));
 
-        mockMvc.perform(put("/api/v1/places/categories/{id}", 1)
-                        .content(categoryRequest)
-                        .contentType(MediaType.APPLICATION_JSON))
+        mockMvc.perform(put(API_CATEGORY_BY_ID, 1)
+                        .content(CATEGORY_JSON_SINGLE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
     }
 
     @Test
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void deleteCategoryById() throws Exception {
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+
         doNothing().when(categoryService).deleteCategory(anyLong());
 
-        mockMvc.perform(delete("/api/v1/places/categories/{id}", 1))
+        mockMvc.perform(delete(API_CATEGORY_BY_ID, 1)
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk());
-    }
-
-    private CategoryRequest createCategoryRequest(String slug, String name) {
-        return new CategoryRequest(slug, name);
     }
 
 }

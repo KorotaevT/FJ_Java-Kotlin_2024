@@ -42,8 +42,7 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized, invalid credentials")
     })
     public String login(@RequestBody LoginRequest loginDTO, HttpServletResponse response) {
-        authService.authenticate(loginDTO, response);
-        return "Login successful";
+        return authService.authenticate(loginDTO);
     }
 
     @PostMapping("/logout")

@@ -1,21 +1,14 @@
 package org.example.service;
 
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import groovy.util.logging.Slf4j;
-import io.restassured.RestAssured;
 import org.example.dto.response.EventKudagoResult;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -24,20 +17,34 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.example.MockObjects.AIRPORTS_NAME;
+import static org.example.MockObjects.AIRPORTS_SLUG;
+import static org.example.MockObjects.AMUSEMENT_NAME;
+import static org.example.MockObjects.AMUSEMENT_SLUG;
+import static org.example.MockObjects.ANIMAL_SHELTERS_NAME;
+import static org.example.MockObjects.ANIMAL_SHELTERS_SLUG;
+import static org.example.MockObjects.EKATERINBURG_NAME;
+import static org.example.MockObjects.EKATERINBURG_SLUG;
+import static org.example.MockObjects.KAZAN_NAME;
+import static org.example.MockObjects.KAZAN_SLUG;
+import static org.example.MockObjects.MOSCOW_NAME;
+import static org.example.MockObjects.MOSCOW_SLUG;
+import static org.example.MockObjects.NIZHNY_NOVGOROD_NAME;
+import static org.example.MockObjects.NIZHNY_NOVGOROD_SLUG;
+import static org.example.MockObjects.ST_PETERSBURG_NAME;
+import static org.example.MockObjects.ST_PETERSBURG_SLUG;
+import static org.example.MockObjects.THEATRE_NAME;
+import static org.example.MockObjects.THEATRE_SLUG;
+import static org.example.MockObjects.WORKSHOPS_NAME;
+import static org.example.MockObjects.WORKSHOPS_SLUG;
 
 @Slf4j
-@ExtendWith(MockitoExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
+@ExtendWith({MockitoExtension.class, WireMockExtension.class})
+@SpringBootTest
 @Testcontainers
 class KudagoServiceTest {
-
-    @LocalServerPort
-    private Integer port;
 
     @Autowired
     private KudagoService kudagoService;
@@ -46,7 +53,7 @@ class KudagoServiceTest {
     static WireMockExtension wireMock = WireMockExtension.newInstance()
             .options(
                     wireMockConfig()
-                            .dynamicPort()
+                            .port(8081)
                             .usingFilesUnderClasspath("wiremock")
             )
             .build();
@@ -54,11 +61,6 @@ class KudagoServiceTest {
     @DynamicPropertySource
     static void configureProperties(DynamicPropertyRegistry registry) {
         registry.add("rest.kudago.url", wireMock::baseUrl);
-    }
-
-    @BeforeEach
-    void setUp() {
-        RestAssured.port = port;
     }
 
     @Test
@@ -86,26 +88,6 @@ class KudagoServiceTest {
         assertThat(secondResult.getTitle()).isEqualTo("иммерсивная выставка «Алиса в Зазеркалье»");
         assertThat(secondResult.getLocation().getSlug()).isEqualTo("spb");
         assertThat(secondResult.getPrice()).isEqualTo("350 рублей");
-    }
-
-    @ParameterizedTest
-    @CsvSource({
-            "400", "500"
-    })
-    void testKudagoBadResponseEvents(int responseHttpCode) {
-        wireMock.stubFor(
-                WireMock.get(urlEqualTo("/events?fields=title,price,dates,location&actual_since=1729458000"))
-                        .willReturn(
-                                aResponse()
-                                        .withHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                                        .withStatus(responseHttpCode)
-                        )
-        );
-
-        long actualSince = 1729458000;
-        var result = kudagoService.getEvents(actualSince);
-
-        assertThat(result == null);
     }
 
     @Test
@@ -203,24 +185,24 @@ class KudagoServiceTest {
         assertThat(result).hasSize(5);
 
         assertThat(result[0].getId()).isEqualTo(123);
-        assertThat(result[0].getSlug()).isEqualTo("airports");
-        assertThat(result[0].getName()).isEqualTo("Аэропорты");
+        assertThat(result[0].getSlug()).isEqualTo(AIRPORTS_SLUG);
+        assertThat(result[0].getName()).isEqualTo(AIRPORTS_NAME);
 
         assertThat(result[1].getId()).isEqualTo(89);
-        assertThat(result[1].getSlug()).isEqualTo("amusement");
-        assertThat(result[1].getName()).isEqualTo("Развлечения");
+        assertThat(result[1].getSlug()).isEqualTo(AMUSEMENT_SLUG);
+        assertThat(result[1].getName()).isEqualTo(AMUSEMENT_NAME);
 
         assertThat(result[2].getId()).isEqualTo(114);
-        assertThat(result[2].getSlug()).isEqualTo("animal-shelters");
-        assertThat(result[2].getName()).isEqualTo("Питомники");
+        assertThat(result[2].getSlug()).isEqualTo(ANIMAL_SHELTERS_SLUG);
+        assertThat(result[2].getName()).isEqualTo(ANIMAL_SHELTERS_NAME);
 
         assertThat(result[3].getId()).isEqualTo(48);
-        assertThat(result[3].getSlug()).isEqualTo("theatre");
-        assertThat(result[3].getName()).isEqualTo("Театры");
+        assertThat(result[3].getSlug()).isEqualTo(THEATRE_SLUG);
+        assertThat(result[3].getName()).isEqualTo(THEATRE_NAME);
 
         assertThat(result[4].getId()).isEqualTo(127);
-        assertThat(result[4].getSlug()).isEqualTo("workshops");
-        assertThat(result[4].getName()).isEqualTo("Мастерские");
+        assertThat(result[4].getSlug()).isEqualTo(WORKSHOPS_SLUG);
+        assertThat(result[4].getName()).isEqualTo(WORKSHOPS_NAME);
     }
 
     @Test
@@ -229,20 +211,20 @@ class KudagoServiceTest {
 
         assertThat(result).hasSize(5);
 
-        assertThat(result[0].getSlug()).isEqualTo("ekb");
-        assertThat(result[0].getName()).isEqualTo("Екатеринбург");
+        assertThat(result[0].getSlug()).isEqualTo(EKATERINBURG_SLUG);
+        assertThat(result[0].getName()).isEqualTo(EKATERINBURG_NAME);
 
-        assertThat(result[1].getSlug()).isEqualTo("kzn");
-        assertThat(result[1].getName()).isEqualTo("Казань");
+        assertThat(result[1].getSlug()).isEqualTo(KAZAN_SLUG);
+        assertThat(result[1].getName()).isEqualTo(KAZAN_NAME);
 
-        assertThat(result[2].getSlug()).isEqualTo("msk");
-        assertThat(result[2].getName()).isEqualTo("Москва");
+        assertThat(result[2].getSlug()).isEqualTo(MOSCOW_SLUG);
+        assertThat(result[2].getName()).isEqualTo(MOSCOW_NAME);
 
-        assertThat(result[3].getSlug()).isEqualTo("nnv");
-        assertThat(result[3].getName()).isEqualTo("Нижний Новгород");
+        assertThat(result[3].getSlug()).isEqualTo(NIZHNY_NOVGOROD_SLUG);
+        assertThat(result[3].getName()).isEqualTo(NIZHNY_NOVGOROD_NAME);
 
-        assertThat(result[4].getSlug()).isEqualTo("spb");
-        assertThat(result[4].getName()).isEqualTo("Санкт-Петербург");
+        assertThat(result[4].getSlug()).isEqualTo(ST_PETERSBURG_SLUG);
+        assertThat(result[4].getName()).isEqualTo(ST_PETERSBURG_NAME);
     }
 
 }

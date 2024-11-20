@@ -1,16 +1,22 @@
 package org.example.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.example.AbstractTestContainer;
-import org.example.dto.request.LoginRequest;
-import org.example.dto.request.PasswordResetRequest;
-import org.example.dto.request.RegistrationRequest;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.jdbc.Sql;
+
+import static org.example.MockObjects.API_AUTH_LOGIN;
+import static org.example.MockObjects.API_AUTH_LOGOUT;
+import static org.example.MockObjects.API_AUTH_REGISTER;
+import static org.example.MockObjects.API_AUTH_RESET_PASSWORD;
+import static org.example.MockObjects.AUTHORIZATION_HEADER;
+import static org.example.MockObjects.BEARER_PREFIX;
+import static org.example.MockObjects.PASSWORD_RESET_SUCCESS_MESSAGE;
+import static org.example.MockObjects.REGISTRATION_SUCCESS_MESSAGE;
+import static org.example.MockObjects.passwordResetRequest;
+import static org.example.MockObjects.userLoginRequest;
+import static org.example.MockObjects.userRegistrationRequest;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -18,54 +24,53 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @RequiredArgsConstructor
 public class AuthControllerTest extends AbstractTestContainer {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private ObjectMapper objectMapper;
-
     @Test
-    @DirtiesContext
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void testRegisterUser() throws Exception {
-        var registrationRequest = new RegistrationRequest("testuser", "password123");
-
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post(API_AUTH_REGISTER)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(registrationRequest)))
+                        .content(objectMapper.writeValueAsString(userRegistrationRequest)))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Registration successful"));
+                .andExpect(content().string(REGISTRATION_SUCCESS_MESSAGE));
     }
 
     @Test
-    @DirtiesContext
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void testLoginUser() throws Exception {
-        var loginRequest = new LoginRequest("testuser", "password123", true);
-
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post(API_AUTH_LOGIN)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Login successful"));
+                        .content(objectMapper.writeValueAsString(userLoginRequest)))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @DirtiesContext
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void testLogoutUser() throws Exception {
-        mockMvc.perform(post("/api/v1/auth/logout"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Logout successful!"));
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        mockMvc.perform(post(API_AUTH_LOGOUT)
+                        .header(AUTHORIZATION_HEADER, token))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @DirtiesContext
+    @Sql({
+            "classpath:db/insert-data.sql",
+    })
+    @Sql(value = "classpath:db/clear-db.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     public void testResetPassword() throws Exception {
-        var passwordResetRequest = new PasswordResetRequest("testuser", "newPassword123", "123456");
-
-        mockMvc.perform(post("/api/v1/auth/reset-password")
+        var token = BEARER_PREFIX + authService.authenticate(userLoginRequest);
+        mockMvc.perform(post(API_AUTH_RESET_PASSWORD)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(passwordResetRequest)))
+                        .content(objectMapper.writeValueAsString(passwordResetRequest))
+                        .header(AUTHORIZATION_HEADER, token))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Password reset successful!"));
+                .andExpect(content().string(PASSWORD_RESET_SUCCESS_MESSAGE));
     }
 
 }

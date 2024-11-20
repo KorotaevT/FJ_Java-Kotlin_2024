@@ -3,7 +3,7 @@
     {
       "request": {
         "method": "GET",
-        "urlPattern": "/place-categories"
+        "urlPattern": "/currency/place-categories"
       },
       "response": {
         "status": 200,
@@ -42,7 +42,7 @@
     {
       "request": {
         "method": "GET",
-        "urlPattern": "/locations"
+        "urlPattern": "/currency/locations"
       },
       "response": {
         "status": 200,
@@ -76,7 +76,7 @@
     {
       "request": {
         "method": "GET",
-        "url": "/events?fields=title,price,dates,location&actual_since=1729458000"
+        "url": "/currency/events?fields=title,price,dates,location&actual_since=1729458000"
       },
       "response": {
         "status": 200,

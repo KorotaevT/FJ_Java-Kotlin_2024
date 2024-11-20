@@ -1,0 +1,42 @@
+rest:
+  kudago:
+    url: https://kudago.com/public-api/v1.4
+    read-timeout: 120s
+    connect-timeout: 120s
+    maximum-number-concurrent-requests: 5
+  spring-app-currency:
+    url: ${REST_CURRENCY_URL:http://localhost:8081/currency}
+    read-timeout: 120s
+    connect-timeout: 120s
+
+fixed:
+  thread:
+    pool:
+      size: 10
+
+scheduled:
+  thread:
+    pool:
+      size: 2
+
+initialization:
+  interval: PT1H
+
+server:
+  port: 8081
+
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:11.1://test_db
+    username: test
+    password: test
+  jpa:
+    hibernate:
+      ddl-auto: update
+  liquibase:
+    change-log: liquibase/test-changelog.xml
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY:FEAA575643235CF7B954951CC2D9EC14178D373DA120612792DBC905062CD0D8}
+verification:
+  code: ${VERIFICATION_CODE:0000}

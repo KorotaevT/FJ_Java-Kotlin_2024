@@ -49,7 +49,7 @@ public class AuthService {
         response.setHeader("Authorization", "");
     }
 
-    public void authenticate(LoginRequest loginRequest, HttpServletResponse response) {
+    public String authenticate(LoginRequest loginRequest) {
         if (!userRepository.existsByUsername(loginRequest.getUsername())) {
             throw new UsernameNotFoundException("User with that name has not been registered!");
         }
@@ -64,7 +64,7 @@ public class AuthService {
         var user = userRepository.findByUsername(loginRequest.getUsername());
 
         var token = jwtService.generateToken(user, loginRequest.getRememberMe());
-        response.setHeader("Authorization", "Bearer " + token);
+        return token;
     }
 
     public void resetPassword(PasswordResetRequest passwordResetRequest) {

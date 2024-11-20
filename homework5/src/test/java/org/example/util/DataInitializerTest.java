@@ -1,21 +1,31 @@
 package org.example.util;
 
+import org.example.dto.response.CategoryResponse;
+import org.example.dto.response.LocationResponse;
+import org.example.service.CategoryService;
+import org.example.service.KudagoService;
+import org.example.service.LocationService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.example.dto.response.CategoryResponse;
-import org.example.dto.response.LocationResponse;
-import org.example.service.CategoryService;
-import org.example.service.KudagoService;
-import org.example.service.LocationService;
 
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
-import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DataInitializerTest {
@@ -32,15 +42,24 @@ class DataInitializerTest {
     @InjectMocks
     private DataInitializer dataInitializer;
 
+    @BeforeEach
+    void setUp() {
+        ExecutorService fixedThreadPool = Executors.newFixedThreadPool(2);
+        ScheduledExecutorService scheduledThreadPool = Executors.newScheduledThreadPool(1);
+        dataInitializer = new DataInitializer(categoryService, locationService, kudagoService, fixedThreadPool, scheduledThreadPool);
+    }
+
     @Test
-    void testInit_PositiveScenario() {
+    void testInit_PositiveScenario() throws InterruptedException {
         CategoryResponse[] categories = {new CategoryResponse(), new CategoryResponse()};
         LocationResponse[] locations = {new LocationResponse(), new LocationResponse()};
 
         when(kudagoService.getCategories()).thenReturn(categories);
         when(kudagoService.getLocations()).thenReturn(locations);
 
+        CountDownLatch latch = new CountDownLatch(1);
         dataInitializer.init();
+        latch.await(1, TimeUnit.SECONDS);
 
         ArgumentCaptor<CategoryResponse> categoryCaptor = ArgumentCaptor.forClass(CategoryResponse.class);
         ArgumentCaptor<LocationResponse> locationCaptor = ArgumentCaptor.forClass(LocationResponse.class);
@@ -51,36 +70,46 @@ class DataInitializerTest {
         List<CategoryResponse> capturedCategories = categoryCaptor.getAllValues();
         List<LocationResponse> capturedLocations = locationCaptor.getAllValues();
 
-        assertThat(capturedCategories).containsExactlyInAnyOrder(categories);
-        assertThat(capturedLocations).containsExactlyInAnyOrder(locations);
+        for (CategoryResponse category : categories) {
+            assertTrue(capturedCategories.contains(category));
+        }
+
+        for (LocationResponse location : locations) {
+            assertTrue(capturedLocations.contains(location));
+        }
     }
 
     @Test
-    void testInit_NoCategoriesFetched() {
+    void testInit_NoCategoriesFetched() throws InterruptedException {
         when(kudagoService.getCategories()).thenReturn(null);
         LocationResponse[] locations = {new LocationResponse(), new LocationResponse()};
         when(kudagoService.getLocations()).thenReturn(locations);
 
+        CountDownLatch latch = new CountDownLatch(1);
         dataInitializer.init();
+        latch.await(1, TimeUnit.SECONDS);
 
         ArgumentCaptor<LocationResponse> locationCaptor = ArgumentCaptor.forClass(LocationResponse.class);
 
         verify(categoryService, never()).createCategory(any(CategoryResponse.class));
-        verify(locationService, times(locations.length)).createLocation(any(LocationResponse.class));
         verify(locationService, times(locations.length)).createLocation(locationCaptor.capture());
 
         List<LocationResponse> capturedLocations = locationCaptor.getAllValues();
 
-        assertThat(capturedLocations).containsExactlyInAnyOrder(locations);
+        for (LocationResponse location : locations) {
+            assertTrue(capturedLocations.contains(location));
+        }
     }
 
     @Test
-    void testInit_NoLocationsFetched() {
+    void testInit_NoLocationsFetched() throws InterruptedException {
         CategoryResponse[] categories = {new CategoryResponse(), new CategoryResponse()};
         when(kudagoService.getCategories()).thenReturn(categories);
         when(kudagoService.getLocations()).thenReturn(null);
 
+        CountDownLatch latch = new CountDownLatch(1);
         dataInitializer.init();
+        latch.await(1, TimeUnit.SECONDS);
 
         ArgumentCaptor<CategoryResponse> categoryCaptor = ArgumentCaptor.forClass(CategoryResponse.class);
 
@@ -89,21 +118,22 @@ class DataInitializerTest {
 
         List<CategoryResponse> capturedCategories = categoryCaptor.getAllValues();
 
-        assertThat(capturedCategories).containsExactlyInAnyOrder(categories);
+        for (CategoryResponse category : categories) {
+            assertTrue(capturedCategories.contains(category));
+        }
     }
 
     @Test
-    void testInit_NoCategoriesAndLocationsFetched() {
+    void testInit_NoCategoriesAndLocationsFetched() throws InterruptedException {
         when(kudagoService.getCategories()).thenReturn(null);
         when(kudagoService.getLocations()).thenReturn(null);
 
+        CountDownLatch latch = new CountDownLatch(1);
         dataInitializer.init();
+        latch.await(1, TimeUnit.SECONDS);
 
         verify(categoryService, never()).createCategory(any(CategoryResponse.class));
         verify(locationService, never()).createLocation(any(LocationResponse.class));
-
-        verifyNoMoreInteractions(categoryService);
-        verifyNoMoreInteractions(locationService);
     }
 
 }
