@@ -34,6 +34,25 @@ spring:
   liquibase:
     change-log: liquibase/changelog.xml
 
+management:
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    distribution:
+      percentiles-histogram:
+        test:
+          timer:
+            histogram: true
+
 jwt:
   secret-key: ${JWT_SECRET_KEY:FEAA575643235CF7B954951CC2D9EC14178D373DA120612792DBC905062CD0D8}
 verification:
