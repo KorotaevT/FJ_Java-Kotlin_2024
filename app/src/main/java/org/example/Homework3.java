@@ -5,6 +5,8 @@ import org.example.collection.CustomLinkedList;
 import java.util.Iterator;
 import java.util.stream.Stream;
 
+import static org.example.memory.OutOfMemoryExample.triggerOutOfMemory;
+
 public class Homework3 {
 
 
@@ -16,6 +18,7 @@ public class Homework3 {
 
         System.out.println("Demonstrating iterator:");
         demonstrateIterator(customLinkedList);
+        triggerOutOfMemory();
     }
 
     public static CustomLinkedList<Integer> createLinkedListFromStream(Stream<Integer> stream) {
