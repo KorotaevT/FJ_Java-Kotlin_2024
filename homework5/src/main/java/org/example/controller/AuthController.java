@@ -7,15 +7,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.dto.request.LoginRequest;
 import org.example.dto.request.PasswordResetRequest;
 import org.example.dto.request.RegistrationRequest;
+import org.example.metric.CustomMetric;
 import org.example.service.AuthService;
+import org.slf4j.MDC;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -24,6 +28,8 @@ public class AuthController {
 
     private final AuthService authService;
 
+    private final CustomMetric customMetric;
+
     @PostMapping("/register")
     @Operation(summary = "Register a new user", description = "Registers a new user in the system.")
     @ApiResponses({
@@ -31,7 +37,12 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid registration details")
     })
     public String register(@Valid @RequestBody RegistrationRequest registrationDTO) {
+        MDC.put("username", registrationDTO.getUsername());
+        log.info("Registering user");
         authService.register(registrationDTO);
+        log.info("Registration successful");
+        MDC.clear();
+        customMetric.increment();
         return "Registration successful";
     }
 
@@ -42,13 +53,22 @@ public class AuthController {
             @ApiResponse(responseCode = "401", description = "Unauthorized, invalid credentials")
     })
     public String login(@RequestBody LoginRequest loginDTO, HttpServletResponse response) {
-        return authService.authenticate(loginDTO);
+        MDC.put("username", loginDTO.getUsername());
+        log.info("Logging in user");
+
+        String tokenResponseDTO = authService.authenticate(loginDTO);
+
+        log.info("Login successful");
+        MDC.clear();
+
+        return tokenResponseDTO;
     }
 
     @PostMapping("/logout")
     @Operation(summary = "Logout user", description = "Logs out the user by clearing the JWT token.")
     @ApiResponse(responseCode = "200", description = "Logout successful")
     public String logout(HttpServletResponse response) {
+        log.info("Logging out user");
         authService.logout(response);
         return "Logout successful!";
     }
@@ -60,7 +80,9 @@ public class AuthController {
             @ApiResponse(responseCode = "400", description = "Invalid reset details or verification code")
     })
     public String resetPassword(@RequestBody PasswordResetRequest passwordResetDTO) {
+        log.info("Resetting password");
         authService.resetPassword(passwordResetDTO);
+        log.info("Password reset successful");
         return "Password reset successful!";
     }
 
